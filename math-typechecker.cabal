@@ -25,7 +25,10 @@ source-repository head
 
 library
   exposed-modules:
-      Lib
+      Common
+      Group
+      Mapping
+      Set
   other-modules:
       Paths_math_typechecker
   hs-source-dirs:
