@@ -1,0 +1,38 @@
+> A := finite Set
+A: finite Set A
+
+> B := Set
+B: Set B
+
+> C := Set Natural
+C: Set Natural
+
+> PB := powerSet B
+PB: Set of S where
+    S subset B
+
+> f := PB -> B
+f: Set of S -> Set where
+    s subset B
+
+> A intersect B
+finite Set AB where
+    AB = A intersect B
+
+> g := A -> B
+g: finite Set A -> Set B
+
+> g(A intersect B)
+finite Set B' where
+    B' subset B
+
+> ab := some in A intersect B
+element in A and element in B
+
+> g(ab)
+element in B
+
+> A cross B
+> Set of (a, b) where
+    a in A
+    b in B

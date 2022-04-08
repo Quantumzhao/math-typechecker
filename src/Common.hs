@@ -7,7 +7,9 @@ someFunc = putStrLn "someFunc"
 
 data BooleanExpression = Not | And | Or | Xor
 
-data Cardinal = Size Natural | CountableInf | UncountableInf
+data Finite = Size Natural | Range Natural Natural 
+
+data Infinite = Countable | Uncountable | MoreThan Natural | LessThan
 
 data Relation a b
 
