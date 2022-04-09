@@ -1,0 +1,13 @@
+> G := Group Z4 +
+G: abelian Group a + where 
+	a: [n]_(mod 4) where
+		n in [0, 3]
+
+> f := V -> G where -> is bijective
+> f: V -> abelian Group a + where 
+	a: [n]_(mod 4) where
+		n in [0, 3]
+    -> is bijective
+
+> f^(-1)(G)
+V
