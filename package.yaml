@@ -1,10 +1,10 @@
 name:                math-typechecker
 version:             0.1.0.0
-github:              "githubuser/math-typechecker"
+github:              "Quantumzhao/math-typechecker"
 license:             BSD3
-author:              "Author name here"
-maintainer:          "example@example.com"
-copyright:           "2022 Author name here"
+author:              "Quantumzhao"
+maintainer:          "quantumzhao@protonmail.ch"
+copyright:           "2022 Quantumzhao"
 
 extra-source-files:
 - README.md
@@ -17,13 +17,14 @@ extra-source-files:
 # To avoid duplicated efforts in documentation and dealing with the
 # complications of embedding Haddock markup inside cabal files, it is
 # common to point users to the README.md file.
-description:         Please see the README on GitHub at <https://github.com/githubuser/math-typechecker#readme>
+description:         Please see the README on GitHub at <https://github.com/Quantumzhao/math-typechecker#readme>
 
 dependencies:
 - base >= 4.7 && < 5
 - random >= 0.1
 - uuid >= 0.1
 - MonadRandom >= 0.1
+- mtl >= 0.1
 
 library:
   source-dirs: src
