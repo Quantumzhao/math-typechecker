@@ -135,15 +135,9 @@ cross (x : xs) =
 rename :: Int -> BooleanExpression (SetProperty Int) -> BooleanExpression (SetProperty Int)
 rename incr ExpFalse = ExpFalse
 rename incr ExpTrue = ExpTrue
-rename incr (Characteristic (p,  v)) = Characteristic (p, v + incr)
+rename incr (Characteristic (p, v)) = Characteristic (p, v + incr)
 rename incr (Not inner) = Not $ rename incr inner
 rename incr (And e1 e2) = And (rename incr e1) (rename incr e2)
 rename incr (Or e1 e2) = Or (rename incr e1) (rename incr e2)
 rename incr (Xor e1 e2) = Xor (rename incr e1) (rename incr e2)
 
--- >>> dummy
--- Set {name = "A \215 B", expression = [1,2], variables = 2, property = And (Characteristic ("pB",1)) (Characteristic ("pA",2))}
-dummy = 
-  let a = evalState (getSimpleSet "A") [] in
-  let b = evalState (getSimpleSet "B") [] in
-  cross [a, b]
