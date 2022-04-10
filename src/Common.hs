@@ -39,8 +39,8 @@ genLabel base = do
       put $ (name, count + 1) : labels'
       return $ name ++ show count
     (Nothing, _) -> do 
-      put $ (base, 0) : labels
-      return ""
+      put $ (base, 1) : labels
+      return base
   where
     takeOut f (x : xs) =
       if f x then (Just x, xs)
@@ -50,20 +50,6 @@ genLabel base = do
           (Just res, xs') -> (Just res, x : xs')
     takeOut _ [] = (Nothing, [])
 
-substitute :: (Eq t) => BooleanExpression t -> t -> t -> BooleanExpression t
-substitute ExpFalse fromVar toVar = ExpFalse
-substitute ExpTrue fromVar toVar = ExpTrue
-substitute (Characteristic c) fromVar toVar
-  | c == fromVar = Characteristic toVar
-  | otherwise = Characteristic c
-substitute (Not inner) fromVar toVar = 
-  Not $ substitute inner fromVar toVar
-substitute (And e1 e2) fromVar toVar = 
-  And (substitute e1 fromVar toVar) (substitute e2 fromVar toVar)
-substitute (Or e1 e2) fromVar toVar = 
-  Or (substitute e1 fromVar toVar) (substitute e2 fromVar toVar)
-substitute (Xor e1 e2) fromVar toVar = 
-  Xor (substitute e1 fromVar toVar) (substitute e2 fromVar toVar)
 
 
 
