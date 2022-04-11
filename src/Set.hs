@@ -32,7 +32,7 @@ data Set = Set {
   -- the set property and also qualifiers (implicitly stated)
   property :: BooleanExpression (SetProperty Int)
   --cardinal :: Cardinality
-} deriving (Show)
+} deriving (Show, Eq)
 
 -- property name, variable name
 type SetProperty a = (String, a)
@@ -45,10 +45,14 @@ data Cardinality =
   | AnyInfinite
   | Any
 
-intersect :: Set -> Set -> Set
-intersect a b
-  | length (expression a) == length (expression b) =
-    let offset = variables a in
+intersect :: [Set] -> State Int Set
+intersect [] = return empty
+intersect [x] = return x
+intersect (x : xs) = do
+  rest <- intersect xs
+  if rest == empty then return x
+  else if x == empty then return rest
+  else if length (expression x) == length (expression rest) then do
     -- let c = case (cardinal a, cardinal b) of
     --         (Finite (Size f1), Finite (Size f2)) -> Finite $ Range 0 (min f1 f2)
     --         (Finite (Size f1), Finite (Range s e)) -> Finite $ Range 0 (min f1 e)
@@ -58,14 +62,38 @@ intersect a b
     --         (AnyFinite, _) -> AnyFinite
     --         (ca, _) -> ca
     -- in
-    Set (name a ++ " ∩ " ++ name b) 
-        (expression a) 
-        (variables a + variables b) 
-        (And (property a) (property b)) --c
-  | otherwise = empty
+      (Set xn xe xv xp) <- rename' x
+      return $ Set (xn ++ " ∩ " ++ name rest) xe (xv + variables rest) (And xp (property rest)) --c
+  else return empty
 
--- union :: Set -> Set -> Set
--- union a b = Set (name a ++ " ∪ " ++ name b) (From [pa, pb] Or)
+union :: [Set] -> State Int Set
+union [] = return empty
+union [x] = return x
+union (x : xs) = do
+  rest <- union xs
+  if rest == empty then return x
+  else if x == empty then return rest
+  else if length (expression x) > length (expression rest) then return x
+  else if length (expression x) < length (expression rest) then return rest
+  else do
+    
+    -- let offset = variables rest in
+    -- Set (name x ++ " ∪ " ++ name rest)
+    --     (expression x)
+    --     (variables x + variables rest)
+    --     ExpFalse 
+    where 
+      unionOn2_tuple (TupleAnd a c) tupB = do
+        acc <- (get :: State Int Int)
+        let (TupleAnd b d) = rename acc tupB
+        return $ ((a `minus` b) `And` c) `Or` 
+                 ((a `And` b) `And` (c `Or` d)) `Or` 
+                 ((b `minus` a) `And` d)
+      -- code should never take this path
+      unionOn2_tuple _ _ = return ExpFalse 
+      minus a b = And a (Not b)
+      unionOnn_tuple (TupleAnd a a') (TupleAnd b d') = undefined 
+-- Set (name a ++ " ∪ " ++ name b) (From [pa, pb] Or)
 
 relCompl :: Set -> Set -> Set
 relCompl a b
@@ -120,17 +148,13 @@ subset set name p = do
   let newP = And (property set) (rename (variables set) p)
   return $ Set name' [1] (variables set) newP --(cardinal set)
 
-cross :: [Set] -> Set
-cross [] = empty
-cross [x] = x
-cross (x : xs) = 
-  let rest = cross xs in
-  let offset= length $ expression rest in
-  Set 
-    (name x ++ " × " ++ name rest) 
-    (expression rest ++ fmap (+ offset) (expression x)) 
-    (variables x + variables rest) 
-    (And (property rest) (rename (variables rest) (property x)))
+cross :: [Set] -> State Int Set
+cross [] = return empty
+cross [x] = return x
+cross (x : xs) = do 
+  (Set n' e' v' p') <- cross xs
+  (Set xn xe xv xp) <- rename' x
+  return $ Set (xn ++ " × " ++ n') (e' ++ xe) (v' + xv) (TupleAnd p' xp)
 
 rename :: Int -> BooleanExpression (SetProperty Int) -> BooleanExpression (SetProperty Int)
 rename incr ExpFalse = ExpFalse
@@ -140,4 +164,11 @@ rename incr (Not inner) = Not $ rename incr inner
 rename incr (And e1 e2) = And (rename incr e1) (rename incr e2)
 rename incr (Or e1 e2) = Or (rename incr e1) (rename incr e2)
 rename incr (Xor e1 e2) = Xor (rename incr e1) (rename incr e2)
+rename incr (TupleAnd e1 e2) = TupleAnd (rename incr e1) (rename incr e2)
 
+rename' :: Set -> State Int Set
+rename' (Set sn se sv sp) = do
+  acc <- get
+  let set' = Set sn (fmap (+ acc) se) sv (rename acc sp)
+  modify (+ sv)
+  return set'
