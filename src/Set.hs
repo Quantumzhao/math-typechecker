@@ -7,6 +7,7 @@ import GHC.Natural
 --import System.Random hiding (Finite)
 --import Data.UUID
 import Control.Monad.State.Lazy
+import qualified Data.List as List
 --import Control.Monad.HT
 --import Control.Monad.Random.Strict
 
@@ -38,7 +39,7 @@ data Set = Set {
 type SetProperty a = (String, a)
 
 -- should use set properties to infer cardinality first, if failed then fallback to this field
-data Cardinality = 
+data Cardinality =
     Finite Finite
   | Infinite Infinite
   | AnyFinite
@@ -49,10 +50,9 @@ intersect :: [Set] -> State Int Set
 intersect [] = return empty
 intersect [x] = return x
 intersect (x : xs) = do
-  rest <- intersect xs
-  if rest == empty then return x
-  else if x == empty then return rest
-  else if length (expression x) == length (expression rest) then do
+  rest@(Set n' e' v' p') <- intersect xs
+  if rest == empty || x == empty then return empty
+  else if length (expression x) == length e' then do
     -- let c = case (cardinal a, cardinal b) of
     --         (Finite (Size f1), Finite (Size f2)) -> Finite $ Range 0 (min f1 f2)
     --         (Finite (Size f1), Finite (Range s e)) -> Finite $ Range 0 (min f1 e)
@@ -62,37 +62,47 @@ intersect (x : xs) = do
     --         (AnyFinite, _) -> AnyFinite
     --         (ca, _) -> ca
     -- in
-      (Set xn xe xv xp) <- rename' x
-      return $ Set (xn ++ " ∩ " ++ name rest) xe (xv + variables rest) (And xp (property rest)) --c
+      (Set xn xe xv xp) <- rename v' e' x
+      return $ Set (xn ++ " ∩ " ++ n') xe (xv + v') (And xp p') --c
   else return empty
 
 union :: [Set] -> State Int Set
 union [] = return empty
 union [x] = return x
 union (x : xs) = do
-  rest <- union xs
-  if rest == empty then return x
-  else if x == empty then return rest
-  else if length (expression x) > length (expression rest) then return x
-  else if length (expression x) < length (expression rest) then return rest
-  else do
-    
+  (Set n' e' v' p') <- union xs
+  (Set xn xe xv xp) <- rename v' e' x
+  let newN = xn ++ " ∪ " ++ n'
+  if length e' == 1 && length xe == 1 then
+    return $ Set newN xe (xv + v') (Or xp p')
+  else if length e' == 2 && length xe == 2 then do
+    put v'
+    newP <- unionOn2_tuple p' xp
+    return $ Set newN xe (xv + v') newP
+  else return empty
+  -- rest <- union xs
+  -- if rest == empty then return x
+  -- else if x == empty then return rest
+  -- else if length (expression x) > length (expression rest) then return x
+  -- else if length (expression x) < length (expression rest) then return rest
+  -- else do
+
     -- let offset = variables rest in
     -- Set (name x ++ " ∪ " ++ name rest)
     --     (expression x)
     --     (variables x + variables rest)
     --     ExpFalse 
-    where 
+    where
       unionOn2_tuple (TupleAnd a c) tupB = do
         acc <- (get :: State Int Int)
-        let (TupleAnd b d) = rename acc tupB
-        return $ ((a `minus` b) `And` c) `Or` 
-                 ((a `And` b) `And` (c `Or` d)) `Or` 
+        let (TupleAnd b d) = renameP (+ acc) tupB
+        return $ ((a `minus` b) `And` c) `Or`
+                 ((a `And` b) `And` (c `Or` d)) `Or`
                  ((b `minus` a) `And` d)
       -- code should never take this path
-      unionOn2_tuple _ _ = return ExpFalse 
+      unionOn2_tuple _ _ = return ExpFalse
       minus a b = And a (Not b)
-      unionOnn_tuple (TupleAnd a a') (TupleAnd b d') = undefined 
+    --   unionOnn_tuple (TupleAnd a a') (TupleAnd b d') = undefined 
 -- Set (name a ++ " ∪ " ++ name b) (From [pa, pb] Or)
 
 relCompl :: Set -> Set -> Set
@@ -112,9 +122,9 @@ relCompl a b
   --           in Finite $ Range rangeFrom r1'
   --         ca -> ca
   -- in
-  | expression a == expression b && variables a == variables b = 
-    Set (name a ++ " - " ++ name b) (expression a) (variables a) 
-      (And (property a) $ Not $ rename (variables a) $ property b) --c
+  | expression a == expression b && variables a == variables b =
+    Set (name a ++ " - " ++ name b) (expression a) (variables a)
+      (And (property a) $ Not $ renameP (+ variables a) $ property b) --c
   | otherwise = a
 
 -- >>> evalState [] (getSimpleSet "A")
@@ -127,7 +137,7 @@ relCompl a b
 -- "e" only exists in the local scope, 
 -- no need to dynamically generate names for it
 getSimpleSet :: String -> State Labels Set
-getSimpleSet name = do 
+getSimpleSet name = do
   name' <- genLabel name
   pName <- genLabel $ "p" ++ name
   return $ Set name' [1] 1 $ Characteristic (pName, 1) --Any
@@ -143,32 +153,46 @@ empty = Set "∅" [1] 1 ExpFalse -- Finite $ Size 0
 -- supply a new name and additional property for the subset
 -- thus for any S = { e | P(e) }, its subset will be S' = { e | P(e) ∧ P'(e) }
 subset :: Set -> String -> BooleanExpression (SetProperty Int) -> State Labels Set
-subset set name p = do 
+subset set name p = do
   name' <- genLabel name
-  let newP = And (property set) (rename (variables set) p)
+  let newP = And (property set) (renameP (+ variables set) p)
   return $ Set name' [1] (variables set) newP --(cardinal set)
 
 cross :: [Set] -> State Int Set
 cross [] = return empty
 cross [x] = return x
-cross (x : xs) = do 
+cross (x : xs) = do
   (Set n' e' v' p') <- cross xs
-  (Set xn xe xv xp) <- rename' x
+  (Set xn xe xv xp) <- offsetVars v' x
   return $ Set (xn ++ " × " ++ n') (e' ++ xe) (v' + xv) (TupleAnd p' xp)
 
-rename :: Int -> BooleanExpression (SetProperty Int) -> BooleanExpression (SetProperty Int)
-rename incr ExpFalse = ExpFalse
-rename incr ExpTrue = ExpTrue
-rename incr (Characteristic (p, v)) = Characteristic (p, v + incr)
-rename incr (Not inner) = Not $ rename incr inner
-rename incr (And e1 e2) = And (rename incr e1) (rename incr e2)
-rename incr (Or e1 e2) = Or (rename incr e1) (rename incr e2)
-rename incr (Xor e1 e2) = Xor (rename incr e1) (rename incr e2)
-rename incr (TupleAnd e1 e2) = TupleAnd (rename incr e1) (rename incr e2)
+renameP :: (Int -> Int) -> BooleanExpression (SetProperty Int) -> BooleanExpression (SetProperty Int)
+renameP f ExpFalse = ExpFalse
+renameP f ExpTrue = ExpTrue
+renameP f (Characteristic (p, v)) = Characteristic (p, f v)
+renameP f (Not inner) = Not $ renameP f inner
+renameP f (And e1 e2) = And (renameP f e1) (renameP f e2)
+renameP f (Or e1 e2) = Or (renameP f e1) (renameP f e2)
+renameP f (Xor e1 e2) = Xor (renameP f e1) (renameP f e2)
+renameP f (TupleAnd e1 e2) = TupleAnd (renameP f e1) (renameP f e2)
 
-rename' :: Set -> State Int Set
-rename' (Set sn se sv sp) = do
+offsetVars :: Int -> Set -> State Int Set
+offsetVars index (Set sn se sv sp) = do
   acc <- get
-  let set' = Set sn (fmap (+ acc) se) sv (rename acc sp)
+  let renameOrIncr v = if v == index then index else v + acc
+  let set' = Set sn (fmap renameOrIncr se) sv (renameP renameOrIncr sp)
   modify (+ sv)
   return set'
+
+replaceVars :: [Int] ->Set ->  Set
+replaceVars (i : is) s@(Set sn (se : ses) sv sp) =
+  let sp' = renameP (\v -> if v == se then i else v) sp in
+  let (Set _ ses' _ sp'') = replaceVars is (Set sn ses sv sp') in
+  Set sn (se : ses') sv sp''
+replaceVars _ set = set
+
+-- replace and then offset variable indices
+rename :: Int -> [Int] -> Set -> State Int Set
+rename offset indices s = do
+  s' <- offsetVars offset s
+  return $ replaceVars indices s'

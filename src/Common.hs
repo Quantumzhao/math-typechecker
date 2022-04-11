@@ -13,6 +13,7 @@ data BooleanExpression a
   | And (BooleanExpression a) (BooleanExpression a) 
   | Or (BooleanExpression a) (BooleanExpression a)
   | Xor (BooleanExpression a) (BooleanExpression a)
+  | TupleAnd (BooleanExpression a) (BooleanExpression a)
   | ExpFalse
   | ExpTrue
   -- it will evaluate the qualifier to either true or false
