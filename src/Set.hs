@@ -176,6 +176,9 @@ renameP f (Or e1 e2) = Or (renameP f e1) (renameP f e2)
 renameP f (Xor e1 e2) = Xor (renameP f e1) (renameP f e2)
 renameP f (TupleAnd e1 e2) = TupleAnd (renameP f e1) (renameP f e2)
 
+-- e.g. change { x₁x₂ | P₁(x₁) ∧ P₂(x₂) } to { x₃x₄ | P₁(x₃) ∧ P₂(x₄) }
+--     so that when doing binary set operations, the variable names don't clash
+-- of course the notation used in this program would be 
 offsetVars :: Int -> Set -> State Int Set
 offsetVars index (Set sn se sv sp) = do
   acc <- get
@@ -184,6 +187,10 @@ offsetVars index (Set sn se sv sp) = do
   modify (+ sv)
   return set'
 
+-- e.g. change { x₁x₂ | P₁(x₁) ∧ P₂(x₂) } and { x₃x₄ | P₃(x₃) ∧ P₄(x₄) }
+--     to { x₃x₄ | P(x₃) ∧ P(x₄) } and { x₃x₄ | P(x₃) ∧ P(x₄) }
+--     so that we can properly apply intersection, union ... in the future
+--     which would then be { x₃x₄ | P(x₃) ∧ P(x₄) }
 replaceVars :: [Int] ->Set ->  Set
 replaceVars (i : is) s@(Set sn (se : ses) sv sp) =
   let sp' = renameP (\v -> if v == se then i else v) sp in
@@ -196,3 +203,18 @@ rename :: Int -> [Int] -> Set -> State Int Set
 rename offset indices s = do
   s' <- offsetVars offset s
   return $ replaceVars indices s'
+
+superSet :: Set -> Set
+superSet set = undefined
+
+setEqual :: Set -> Set -> Bool
+setEqual = undefined 
+
+isIn :: String -> Set -> Bool
+isIn v set = undefined 
+
+isProperSubset :: Set -> Set -> Bool
+isProperSubset sub sup = isSubset sub sup && setEqual sub sup 
+
+isSubset :: Set -> Set -> Bool
+isSubset = undefined 

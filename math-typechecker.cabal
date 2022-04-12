@@ -25,9 +25,11 @@ source-repository head
 
 library
   exposed-modules:
+      BinaryOperation
       Common
       Group
       Mapping
+      Relation
       Set
   other-modules:
       Paths_math_typechecker

@@ -1,9 +1,23 @@
 module Mapping where
 
-data Bijectivity = Injective | Surjective | Bijective
+import Set
 
-data Partiality = None | Partial
+data Bijectivity = Injective | Surjective | Bijective | None
 
-data Mapping a b = Map a b Bijectivity Partiality
+data EquivalenceRelation = Equiv | NotEquiv 
 
+-- data Partiality = None | Partial
+
+data Mapping = Map Set Set Bijectivity
+
+compose :: Mapping -> Mapping -> Maybe Mapping
+compose (Map da ia ba) (Map db ib bb)
+  | ia == db = Just $ Map da ib (getBijectivity ba bb)
+  | otherwise = Nothing
+  where
+    getBijectivity any Bijective = any
+    getBijectivity Bijective any = any
+    getBijectivity Surjective Injective = undefined
+    getBijectivity Injective Surjective = undefined 
+    getBijectivity _ _ = None
 
