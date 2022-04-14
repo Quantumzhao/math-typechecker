@@ -32,7 +32,6 @@ library
       Group
       Mapping
       Node
-      Relation
       Set
   other-modules:
       Paths_math_typechecker

@@ -12,7 +12,6 @@ import Data.List (intersperse, intercalate)
 import qualified Data.Set as DSet
 import ContextState
 import Node
-import Edge (Edge(BinOp), BinaryOperationType (Intersect))
 --import Control.Monad.HT
 --import Control.Monad.Random.Strict
 
@@ -103,14 +102,16 @@ import Edge (Edge(BinOp), BinaryOperationType (Intersect))
 -- subset set subName = Set subName $ Superset set
 
 intersect :: Node -> Node -> GraphState
-intersect a b
-  | areSets [a, b] = do
-    (Context nodes rels count) <- get
-    let newName = name a ++ " ∩ " ++ name b
-    addNewNode (Set newName)
-    addNewEdge (BinOp a b Intersect)
-    return ()
-  | otherwise = return ()
+intersect a@(Set an at) b@(Set bn bt) = do
+  (Context nodes count) <- get
+  let newName = an ++ " ∩ " ++ bn
+  let newNode = Set newName (at ++ bt)
+  addNewNode newNode
+  addNewNode (BinOp a b Intersect)
+  addNewNode (Relation newNode a Subset [])
+  addNewNode (Relation newNode b Subset [])
+  return ()
+intersect _ _ = return ()
 
 newNameFrom :: [Node] -> String -> String
 newNameFrom sets binop = intercalate binop (fmap name sets)
