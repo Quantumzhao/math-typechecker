@@ -10,6 +10,9 @@ import Control.Monad.State.Lazy
 import qualified Data.List as List
 import Data.List (intersperse, intercalate)
 import qualified Data.Set as DSet
+import ContextState
+import Node
+import Edge (Edge(BinOp), BinaryOperationType (Intersect))
 --import Control.Monad.HT
 --import Control.Monad.Random.Strict
 
@@ -22,10 +25,10 @@ import qualified Data.Set as DSet
 -- -- If we let P2 = f ∘ P, then it can be further contracted to the notation used in here
 -- -- The variables (e.g. a, b, ...) and properties are in lists to facillitate multiple 
 -- --    independent qualifiers
-data Set = Set {
+-- data Set = Set {
   -- a user defined name
-  name :: String,
-  structure :: SetExpression
+  -- name :: String,
+  -- structure :: SetExpression
   -- -- the part before qualifier in classical set notation
   -- -- a list of variable indices, can only be a scalar or a tuple
   -- -- e.g. [1, 3, 4] should be interpreted as { (e1, e3, e4) | ... }
@@ -36,18 +39,18 @@ data Set = Set {
   -- -- the set property and also qualifiers (implicitly stated)
   -- property :: BooleanExpression (SetProperty Int)
   -- --cardinal :: Cardinality
-} deriving (Show, Eq)
+-- } deriving (Show, Eq)
 
-data SetExpression
-  = Symbol String
-  | SetNode Set
-  | Intersection [SetExpression]
-  | Union [SetExpression]
-  | Complement SetExpression SetExpression
-  | Subset SetExpression
-  | Superset SetExpression
-  | Cross [SetExpression]
-  deriving (Show, Eq)
+-- data SetExpression
+--   = Symbol String
+--   | SetNode Set
+--   | Intersection [SetExpression]
+--   | Union [SetExpression]
+--   | Complement SetExpression SetExpression
+--   | Subset SetExpression
+--   | Superset SetExpression
+--   | Cross [SetExpression]
+--   deriving (Show, Eq)
 
 -- -- property name, variable name
 -- type SetProperty a = (String, a)
@@ -60,9 +63,9 @@ data SetExpression
 --   | AnyInfinite
 --   | Any
 
-assocBinOp :: ([SetExpression] -> SetExpression) -> String -> [Set] -> Set
-assocBinOp binop notation sets = 
-  Set (intercalate notation (fmap name sets)) $ binop (fmap SetNode sets)
+-- assocBinOp :: ([SetExpression] -> SetExpression) -> String -> [Set] -> Set
+-- assocBinOp binop notation sets = 
+--   Set (intercalate notation (fmap name sets)) $ binop (fmap SetNode sets)
 
 -- intersect :: [Set] -> State Int Set
 -- intersect [] = return empty
@@ -84,20 +87,33 @@ assocBinOp binop notation sets =
 --       return $ Set (xn ++ " ∩ " ++ n') xe (xv + v') (And xp p') --c
 --   else return empty
 
-intersect :: [Set] -> Set
-intersect = assocBinOp Intersection " ∩ "
+-- intersect :: [Set] -> Set
+-- intersect = assocBinOp Intersection " ∩ "
 
-union :: [Set] -> Set
-union = assocBinOp Union " ∪ "
+-- union :: [Set] -> Set
+-- union = assocBinOp Union " ∪ "
 
-cross :: [Set] -> Set
-cross = assocBinOp Cross " × "
+-- cross :: [Set] -> Set
+-- cross = assocBinOp Cross " × "
 
-complement :: Set -> Set -> Set
-complement a b = Set (name a ++ " - " ++ name b) $ Complement (structure a) (structure b) 
+-- complement :: Set -> Set -> Set
+-- complement a b = Set (name a ++ " - " ++ name b) $ Complement (structure a) (structure b) 
 
-subset :: SetExpression -> String -> Set
-subset set subName = Set subName $ Superset set
+-- subset :: SetExpression -> String -> Set
+-- subset set subName = Set subName $ Superset set
+
+intersect :: Node -> Node -> GraphState
+intersect a b
+  | areSets [a, b] = do
+    (Context nodes rels count) <- get
+    let newName = name a ++ " ∩ " ++ name b
+    addNewNode (Set newName)
+    addNewEdge (BinOp a b Intersect)
+    return ()
+  | otherwise = return ()
+
+newNameFrom :: [Node] -> String -> String
+newNameFrom sets binop = intercalate binop (fmap name sets)
 
 -- union :: [Set] -> State Int Set
 -- union [] = return empty
@@ -178,12 +194,12 @@ subset set subName = Set subName $ Superset set
 -- -- { e | ∀ e ∈ U, P(e) } where P(x) = True ∀ x ∈ U
 -- universal :: Set
 -- universal = Set "U" [1] 1 ExpTrue --Infinite Uncountable
-universal = Set "U" (Symbol "U")
+-- universal = Set "U" (Symbol "U")
 
 -- -- { e | ∀ e ∈ U, P(e) } where P(x) = False ∀ x ∈ U
 -- empty :: Set
 -- empty = Set "∅" [1] 1 ExpFalse -- Finite $ Size 0
-empty = Set "∅" (Symbol "∅")
+-- empty = Set "∅" (Symbol "∅")
 
 -- -- supply a new name and additional property for the subset
 -- -- thus for any S = { e | P(e) }, its subset will be S' = { e | P(e) ∧ P'(e) }
