@@ -1,4 +1,5 @@
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 module Set where
 
 import Prelude
@@ -12,6 +13,7 @@ import Data.List (intersperse, intercalate)
 import qualified Data.Set as DSet
 import ContextState
 import Node
+import Relation
 --import Control.Monad.HT
 --import Control.Monad.Random.Strict
 
@@ -105,7 +107,11 @@ setLit :: String
 setLit = "Set"
 
 genSet :: [String] -> Node
-genSet tags = Object Definition (setLit : tags)
+genSet tags = Object Definition (setTags tags)
+
+-- no puns intended
+setTags :: [String] -> [String]
+setTags tags = if setLit `elem` tags then tags else setLit : tags
 
 isSet :: Node -> Bool
 isSet (Object _ tags)
@@ -113,39 +119,59 @@ isSet (Object _ tags)
   | otherwise = False
 isSet _ = False
 
-intersectFnDef :: Node 
+intersectFnDef :: Node
 intersectFnDef = Binary universal universal universal []
 
 intersect :: Record -> Record -> Context
-intersect (nameA, a) (nameB, b) 
+intersect (nameA, a) (nameB, b)
   | isSet a && isSet b = do
     let partialIntersect = Unary (App intersectFnDef a) universal universal []
     let newName = nameA ++ " ∩ " ++ nameB
-    let newNode = Object (App partialIntersect b) []
+    let newNode = Object (App partialIntersect b) (setTags $ tags a ++ tags b)
+    addNewNode newName newNode
+    addNewStatement (newNode `isSubsetOf` a)
+    addNewStatement (newNode `isSubsetOf` b)
+  | otherwise = return ()
+
+unionFnDef :: Node
+unionFnDef = Binary universal universal universal []
+
+union :: Record -> Record -> Context
+union (nameA, a) (nameB, b)
+  | isSet a && isSet b = do
+    let partialUnion = Unary (App unionFnDef a) universal universal []
+    let unionApp = App partialUnion b
+    let newName = nameA ++ " ∪ " ++ nameB
+    let newNode = Object unionApp (setTags [])
+    addNewNode newName newNode
+    addNewStatement (a `isSubsetOf` newNode)
+    addNewStatement (b `isSubsetOf` newNode)
+  | otherwise = return ()
+
+crossFnDef :: Node
+crossFnDef = Binary universal universal directProductSet []
+
+cross :: Record -> Record -> Context
+cross (nameA, a) (nameB, b)
+  | isSet a && isSet b = do
+    let partialCross = Unary (App crossFnDef a) universal directProductSet []
+    let newName = nameA ++ " × " ++ nameB
+    let newNode = Object (App partialCross b) (setTags [])
     addNewNode newName newNode
   | otherwise = return ()
 
--- union :: Record -> Record -> Context
--- union (nameA, a@(Set ta)) (nameB, b@(Set tb)) = do
---   nodes <- get
---   let newName = nameA ++ " ∪ " ++ nameB
---   let newNode = Set (ta ++ tb)
---   addNewNode newName newNode
---   nodes <- get
---   addNewNode $ Statement [BinOp Union [], a, b]
---   addNewNode $ Statement [Relation Subset [], b, a]
---   addNewNode $ Statement [Relation Subset [], a, b]
--- union _ _ = return ()
+complementFnDef :: Node
+complementFnDef = Binary universal universal universal []
 
--- cross :: Node -> Node -> Context
--- cross a@(Set at) b@(Set bt) = do
---   nodes <- get
---   let newName = an ++ " × " ++ bn
---   let newNode = Set newName (at ++ bt)
---   addNewNode newNode
---   addNewNode (BinOp a b Cross)
--- cross _ _ = return ()
-
+complement :: Record -> Record -> Context
+complement (nameA, a) (nameB, b)
+  | isSet a && isSet b = do
+    let newName = nameA ++ " - " ++ nameB
+    let partialCompl = Unary (App complementFnDef a) universal universal []
+    let newNode = Object (App partialCompl b) (tags a)
+    addNewNode newName newNode
+    addNewStatement (newNode `isSubsetOf` a)
+  | otherwise = return ()
 -- complement :: Node -> Node -> Context 
 -- complement a@(Set at) b@(Set bt) = do
 --   nodes <- get
@@ -156,20 +182,30 @@ intersect (nameA, a) (nameB, b)
 -- complement _ _ = return ()
 
 
--- subset :: String -> Node -> Context 
--- subset name parent@(Set _) = do
---   let newNode = Set name (tags parent)
---   addNewNode newNode
---   addNewNode (Relation newNode parent Subset [])
--- subset _ _ = return ()
+subsetFnDef :: Node
+subsetFnDef = Unary Definition universal universal []
 
--- simpleSet :: String -> [String] -> (Context, Node)
--- simpleSet name tags = do
---   let newSet = Set name tags
---   (addNewNode newSet, newSet)
+subset :: String -> Record  -> Context 
+subset name (nameA, a)
+  | isSet a = do
+    let newNode = genSet (tags a)
+    let newStatement = isSubsetOf newNode a
+    addNewNode name newNode
+    addNewStatement newStatement
+  | otherwise = return ()
 
-universal :: Node 
-universal = Object Definition [setLit]
+{-| returns a statement actually -}
+isSubsetOf :: Node -> Node -> Node
+isSubsetOf a b =
+  let partialApp = App subsetFnDef a in
+  let fullApp = App (FixedRelation partialApp universal []) b in
+  Statement fullApp []
+
+universal :: Node
+universal = Object Definition (setTags [])
+
+directProductSet :: Node
+directProductSet = Object Definition (setTags ["DirectProductSet"])
 
 -- newNameFrom :: [Node] -> String -> String
 -- newNameFrom sets binop = intercalate binop (fmap name sets)
