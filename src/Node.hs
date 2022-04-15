@@ -1,38 +1,67 @@
 module Node where
 
+-- data Node
+--   = Element
+--   | Set {
+--     tags :: [String]
+--   }
+--   | Group {
+--     tags :: [String]
+--   }
+--   | Map {
+--     tags :: [String]
+--   }
+--   | Relation {
+--     Node :: StructuralRelation,
+--     tags :: [String]
+--   }
+--   | BinOp {
+--     operation :: BinaryOperationType,
+--     tags :: [String]
+--   }
+--   | Statement {
+--     dependencies :: [Node]
+--   }
+
+-- data BinaryOperationType
+--   = Intersect
+--   | Union
+--   | Cross
+--   | RelCompl
+
+-- data StructuralRelation
+--   = Subset
+
 data Node
-  = Element
-  | Set {
-    name :: String,
+  = Binary {
+    lValue :: Node,
+    rValue :: Node,
+    out :: Node,
     tags :: [String]
   }
-  | Group {
-    name :: String, 
+  | Unary {
+    from :: UpperStructure,
+    value :: Node, 
+    out :: Node,
     tags :: [String]
   }
-  | Map {
-    domain :: Node,
-    range :: Node,
+  | Object {
+    from :: UpperStructure,
     tags :: [String]
   }
-  | Relation {
-    e1 :: Node,
-    e2 :: Node,
-    _type :: StructuralRelation,
+  | Statement {
+    from :: UpperStructure,
     tags :: [String]
   }
-  | BinOp Node Node BinaryOperationType
 
-data BinaryOperationType
-  = Intersect
-  | Union
-  | Cross
-  | RelCompl
+data UpperStructure
+  = App {
+    transformation :: Node,
+    fixed :: Node
+  }
+  | Definition
 
-data StructuralRelation
-  = Subset
-
-areSets :: [Node] -> Bool
-areSets = all matchSet
-  where matchSet (Set _ _) = True
-        matchSet _ = False
+-- areSets :: [Node] -> Bool
+-- areSets = all matchSet
+--   where matchSet (Set _) = True
+--         matchSet _ = False

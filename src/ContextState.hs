@@ -1,23 +1,24 @@
+{-# LANGUAGE FlexibleContexts #-}
 module ContextState where
 import Common
 import Data.Map
 import Control.Monad.State.Lazy (State, get, put)
 import Node (Node)
+import Control.Monad.Except
+import Control.Monad.State
 
-data Context = Context {
-  nodes :: Map Int Node,
-  counter :: Int
-}
+type Record = (String, Node)
+type Context = State (Map String Node) ()
 
-type GraphState = State Context ()
-
-addNewNode :: Node -> GraphState
-addNewNode node = do
-  (Context nodes c) <- get
-  let nextC = c + 1
-  let nodes' = insert nextC node nodes
-  put (Context nodes' nextC)
-  return ()
+addNewNode :: String -> Node -> Context
+addNewNode name node = do
+  nodes <- get
+  let name' = nextName name nodes
+  let nodes' = insert name' node nodes
+  put nodes'
+  where nextName name map
+          | not $ member name map = name
+          | otherwise = nextName (name ++ "\'") map
 
 -- addNewEdge :: Edge -> GraphState
 -- addNewEdge edge = do

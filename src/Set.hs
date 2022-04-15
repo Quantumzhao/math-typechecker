@@ -101,20 +101,78 @@ import Node
 -- subset :: SetExpression -> String -> Set
 -- subset set subName = Set subName $ Superset set
 
-intersect :: Node -> Node -> GraphState
-intersect a@(Set an at) b@(Set bn bt) = do
-  (Context nodes count) <- get
-  let newName = an ++ " ∩ " ++ bn
-  let newNode = Set newName (at ++ bt)
-  addNewNode newNode
-  addNewNode (BinOp a b Intersect)
-  addNewNode (Relation newNode a Subset [])
-  addNewNode (Relation newNode b Subset [])
-  return ()
-intersect _ _ = return ()
+setLit :: String
+setLit = "Set"
 
-newNameFrom :: [Node] -> String -> String
-newNameFrom sets binop = intercalate binop (fmap name sets)
+genSet :: [String] -> Node
+genSet tags = Object Definition (setLit : tags)
+
+isSet :: Node -> Bool
+isSet (Object _ tags)
+  | setLit `elem` tags = True
+  | otherwise = False
+isSet _ = False
+
+intersectFnDef :: Node 
+intersectFnDef = Binary universal universal universal []
+
+intersect :: Record -> Record -> Context
+intersect (nameA, a) (nameB, b) 
+  | isSet a && isSet b = do
+    let partialIntersect = Unary (App intersectFnDef a) universal universal []
+    let newName = nameA ++ " ∩ " ++ nameB
+    let newNode = Object (App partialIntersect b) []
+    addNewNode newName newNode
+  | otherwise = return ()
+
+-- union :: Record -> Record -> Context
+-- union (nameA, a@(Set ta)) (nameB, b@(Set tb)) = do
+--   nodes <- get
+--   let newName = nameA ++ " ∪ " ++ nameB
+--   let newNode = Set (ta ++ tb)
+--   addNewNode newName newNode
+--   nodes <- get
+--   addNewNode $ Statement [BinOp Union [], a, b]
+--   addNewNode $ Statement [Relation Subset [], b, a]
+--   addNewNode $ Statement [Relation Subset [], a, b]
+-- union _ _ = return ()
+
+-- cross :: Node -> Node -> Context
+-- cross a@(Set at) b@(Set bt) = do
+--   nodes <- get
+--   let newName = an ++ " × " ++ bn
+--   let newNode = Set newName (at ++ bt)
+--   addNewNode newNode
+--   addNewNode (BinOp a b Cross)
+-- cross _ _ = return ()
+
+-- complement :: Node -> Node -> Context 
+-- complement a@(Set at) b@(Set bt) = do
+--   nodes <- get
+--   let newName = an ++ " - " ++ bn
+--   let newNode = Set newName at
+--   addNewNode newNode
+--   addNewNode (BinOp a b RelCompl) 
+-- complement _ _ = return ()
+
+
+-- subset :: String -> Node -> Context 
+-- subset name parent@(Set _) = do
+--   let newNode = Set name (tags parent)
+--   addNewNode newNode
+--   addNewNode (Relation newNode parent Subset [])
+-- subset _ _ = return ()
+
+-- simpleSet :: String -> [String] -> (Context, Node)
+-- simpleSet name tags = do
+--   let newSet = Set name tags
+--   (addNewNode newSet, newSet)
+
+universal :: Node 
+universal = Object Definition [setLit]
+
+-- newNameFrom :: [Node] -> String -> String
+-- newNameFrom sets binop = intercalate binop (fmap name sets)
 
 -- union :: [Set] -> State Int Set
 -- union [] = return empty

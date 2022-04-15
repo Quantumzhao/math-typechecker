@@ -1,6 +1,6 @@
 module BinaryOperation where
 import Set
-import Relation
+-- import Relation
 
 -- data Associativity = Assoc | NotAssoc
 
