@@ -8,17 +8,28 @@ import Control.Monad.Except
 import Control.Monad.State
 
 type Record = (String, Node)
-type Context = State (Map String Node) ()
+type Context = State (Map String Node, Int) ()
 
+{-| accepts any node except statements. 
+    In which case, use `addNewStatement` instead -}
 addNewNode :: String -> Node -> Context
 addNewNode name node = do
-  nodes <- get
+  (nodes, idGen) <- get
   let name' = nextName name nodes
   let nodes' = insert name' node nodes
-  put nodes'
+  put (nodes', idGen)
   where nextName name map
           | not $ member name map = name
           | otherwise = nextName (name ++ "\'") map
+
+{-| only accepts statements -}
+addNewStatement :: Node -> Context
+addNewStatement stmt = do
+  (nodes, idGen) <- get
+  let name = "statement" ++ show idGen
+  let idGen' = idGen + 1
+  let nodes' = insert name stmt nodes
+  put (nodes', idGen')
 
 -- addNewEdge :: Edge -> GraphState
 -- addNewEdge edge = do

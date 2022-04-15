@@ -28,10 +28,10 @@ library
       BinaryOperation
       Common
       ContextState
-      Edge
       Group
       Mapping
       Node
+      Relation
       Set
   other-modules:
       Paths_math_typechecker

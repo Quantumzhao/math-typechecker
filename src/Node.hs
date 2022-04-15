@@ -49,6 +49,16 @@ data Node
     from :: UpperStructure,
     tags :: [String]
   }
+  | Relation {
+    lValue :: Node,
+    rValue :: Node,
+    tags :: [String]
+  }
+  | FixedRelation {
+    from :: UpperStructure,
+    value :: Node,
+    tags :: [String]
+  }
   | Statement {
     from :: UpperStructure,
     tags :: [String]
