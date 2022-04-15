@@ -45,10 +45,25 @@ data Node
     out :: Node,
     tags :: [String]
   }
-  | Object {
-    from :: UpperStructure,
-    tags :: [String]
+  -- | Object {
+  --   _type :: String,
+  --   from :: UpperStructure,
+  --   tags :: [String]
+  -- }
+  | Set {
+    defOf :: ElementTemplate,
+    tags :: [String],
+    id :: Int
   }
+  | Tuple {
+    entries :: [Node],
+    tags :: [String], 
+    id :: Int
+  }
+  | Unit {
+    tags :: [String],
+    id :: Int
+  } 
   | Relation {
     lValue :: Node,
     rValue :: Node,
@@ -63,13 +78,21 @@ data Node
     from :: UpperStructure,
     tags :: [String]
   }
+  deriving (Eq)
 
 data UpperStructure
   = App {
     transformation :: Node,
     fixed :: Node
   }
-  | Ctor {
-    structure :: Node
-  }
   | Definition
+  deriving (Eq)
+
+data ElementTemplate 
+  -- create from a defined set of elements
+  = Collection [Node]
+  -- create from expression
+  | Template Node
+  | Universal
+  | Empty
+  deriving (Eq)

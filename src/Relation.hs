@@ -7,5 +7,5 @@ relationLit = "Relation"
 relTags :: [String] -> [String]
 relTags tags = "Relation" : tags
 
-genRelation :: [String] -> Node
-genRelation tags = Object Definition (relTags tags)
+genRelation :: Node -> Node -> [String] -> Node
+genRelation relFrom relTo tags = Relation relFrom relTo (relTags tags)

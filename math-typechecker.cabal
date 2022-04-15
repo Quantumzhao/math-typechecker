@@ -33,6 +33,7 @@ library
       Node
       Relation
       Set
+      Statement
       Unit
   other-modules:
       Paths_math_typechecker

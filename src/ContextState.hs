@@ -8,7 +8,8 @@ import Control.Monad.Except
 import Control.Monad.State
 
 type Record = (String, Node)
-type Context = State (Map String Node, Int) ()
+type Graph = Map String Node
+type Context = State (Graph, Int) ()
 
 {-| accepts any node except statements. 
     In which case, use `addNewStatement` instead -}
@@ -30,6 +31,15 @@ addNewStatement stmt = do
   let idGen' = idGen + 1
   let nodes' = insert name stmt nodes
   put (nodes', idGen')
+
+findFirst :: (Node -> Bool) -> Graph -> Maybe Node
+findFirst f map =
+  findFirst' f (elems map)
+  where 
+    findFirst' f (x : xs) = 
+      if f x then Just x
+      else findFirst' f xs
+    findFirst' f [] = Nothing
 
 -- addNewEdge :: Edge -> GraphState
 -- addNewEdge edge = do
