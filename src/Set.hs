@@ -1,5 +1,5 @@
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
+
 module Set where
 
 import Prelude
@@ -149,12 +149,12 @@ union (nameA, a) (nameB, b)
   | otherwise = return ()
 
 crossFnDef :: Node
-crossFnDef = Binary universal universal directProductSet []
+crossFnDef = Binary universal universal setOfDirectProducts []
 
 cross :: Record -> Record -> Context
 cross (nameA, a) (nameB, b)
   | isSet a && isSet b = do
-    let partialCross = Unary (App crossFnDef a) universal directProductSet []
+    let partialCross = Unary (App crossFnDef a) universal setOfDirectProducts []
     let newName = nameA ++ " × " ++ nameB
     let newNode = Object (App partialCross b) (setTags [])
     addNewNode newName newNode
@@ -189,10 +189,21 @@ subset :: String -> Record  -> Context
 subset name (nameA, a)
   | isSet a = do
     let newNode = genSet (tags a)
-    let newStatement = isSubsetOf newNode a
+    let newStatement = newNode `isSubsetOf` a
     addNewNode name newNode
     addNewStatement newStatement
   | otherwise = return ()
+
+powersetFnDef :: Node
+powersetFnDef = Unary Definition universal universal []
+-- powerSet :: Record -> Context
+-- powerSet (name, set) 
+--   | isSet set = do
+--     let newNode = 
+--     let newStatement = set `isSubsetOf` newNode
+--     addNewNode ("Pow(" ++ name ++ ")") newNode
+--     addNewStatement newStatement
+--   | otherwise = return ()
 
 {-| returns a statement actually -}
 isSubsetOf :: Node -> Node -> Node
@@ -204,8 +215,11 @@ isSubsetOf a b =
 universal :: Node
 universal = Object Definition (setTags [])
 
-directProductSet :: Node
-directProductSet = Object Definition (setTags ["DirectProductSet"])
+setOfDirectProducts :: Node
+setOfDirectProducts = Object Definition (setTags ["setOfDirectProducts"])
+
+setOfPowersets :: Node
+setOfPowersets = Object Definition (setTags ["setOfSets"])
 
 -- newNameFrom :: [Node] -> String -> String
 -- newNameFrom sets binop = intercalate binop (fmap name sets)

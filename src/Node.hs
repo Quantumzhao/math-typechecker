@@ -69,9 +69,7 @@ data UpperStructure
     transformation :: Node,
     fixed :: Node
   }
+  | Ctor {
+    structure :: Node
+  }
   | Definition
-
--- areSets :: [Node] -> Bool
--- areSets = all matchSet
---   where matchSet (Set _) = True
---         matchSet _ = False
