@@ -52,13 +52,11 @@ data Node
   -- }
   | Set {
     defOf :: ElementTemplate,
-    tags :: [String],
-    id :: Int
+    tags :: [String]
   }
   | Tuple {
     entries :: [Node],
-    tags :: [String], 
-    id :: Int
+    tags :: [String]
   }
   | Unit {
     tags :: [String],
@@ -92,7 +90,7 @@ data ElementTemplate
   -- create from a defined set of elements
   = Collection [Node]
   -- create from expression
-  | Template Node
+  | Type Node
   | Universal
   | Empty
   deriving (Eq)

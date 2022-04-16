@@ -3,9 +3,9 @@ module ContextState where
 import Common
 import Data.Map
 import Control.Monad.State.Lazy (State, get, put)
-import Node (Node)
 import Control.Monad.Except
 import Control.Monad.State
+import Node
 
 type Record = (String, Node)
 type Graph = Map String Node
@@ -16,12 +16,15 @@ type Context = State (Graph, Int) ()
 addNewNode :: String -> Node -> Context
 addNewNode name node = do
   (nodes, idGen) <- get
-  let name' = nextName name nodes
+  name' <- nextName name nodes
   let nodes' = insert name' node nodes
   put (nodes', idGen)
   where nextName name map
-          | not $ member name map = name
-          | otherwise = nextName (name ++ "\'") map
+          | not $ member name map = return name
+          | otherwise = do 
+              (_, id) <- get
+              move2NextId
+              nextName (name ++ show id) map
 
 {-| only accepts statements -}
 addNewStatement :: Node -> Context
@@ -31,6 +34,9 @@ addNewStatement stmt = do
   let idGen' = idGen + 1
   let nodes' = insert name stmt nodes
   put (nodes', idGen')
+
+move2NextId :: Context
+move2NextId = modify (\(ns, id) -> (ns, id + 1))
 
 findFirst :: (Node -> Bool) -> Graph -> Maybe Node
 findFirst f map =

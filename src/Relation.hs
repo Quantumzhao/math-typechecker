@@ -1,5 +1,7 @@
 module Relation where
 import Node
+import ContextState
+import Set
 
 relationLit :: String
 relationLit = "Relation"

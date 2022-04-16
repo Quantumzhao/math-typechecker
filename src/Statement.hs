@@ -4,6 +4,9 @@ import Node
 import ContextState
 import Data.Map
 
-existStmt :: Node -> Node -> Node -> Map String Node -> Bool
-existStmt a b rel nodes = 
-  undefined 
+{-| `rel` must be a statement -}
+existStmt :: Node -> Graph -> Bool
+existStmt rel nodes = 
+  case findFirst (== rel) nodes of
+    Just _ -> True
+    Nothing -> False

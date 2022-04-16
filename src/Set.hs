@@ -5,17 +5,11 @@ module Set where
 import Prelude
 import Common
 import GHC.Natural
---import System.Random hiding (Finite)
---import Data.UUID
 import Control.Monad.State.Lazy
 import qualified Data.List as List
 import Data.List (intersperse, intercalate)
-import qualified Data.Set as DSet
 import ContextState
 import Node
-import Relation
---import Control.Monad.HT
---import Control.Monad.Random.Strict
 
 -- -- p: property
 -- -- t: tag
@@ -42,53 +36,6 @@ import Relation
   -- --cardinal :: Cardinality
 -- } deriving (Show, Eq)
 
--- data SetExpression
---   = Symbol String
---   | SetNode Set
---   | Intersection [SetExpression]
---   | Union [SetExpression]
---   | Complement SetExpression SetExpression
---   | Subset SetExpression
---   | Superset SetExpression
---   | Cross [SetExpression]
---   deriving (Show, Eq)
-
--- -- property name, variable name
--- type SetProperty a = (String, a)
-
--- -- should use set properties to infer cardinality first, if failed then fallback to this field
--- data Cardinality =
---     Finite Finite
---   | Infinite Infinite
---   | AnyFinite
---   | AnyInfinite
---   | Any
-
--- assocBinOp :: ([SetExpression] -> SetExpression) -> String -> [Set] -> Set
--- assocBinOp binop notation sets = 
---   Set (intercalate notation (fmap name sets)) $ binop (fmap SetNode sets)
-
--- intersect :: [Set] -> Set
--- intersect = assocBinOp Intersection " ∩ "
-
--- union :: [Set] -> Set
--- union = assocBinOp Union " ∪ "
-
--- cross :: [Set] -> Set
--- cross = assocBinOp Cross " × "
-
--- complement :: Set -> Set -> Set
--- complement a b = Set (name a ++ " - " ++ name b) $ Complement (structure a) (structure b) 
-
--- subset :: SetExpression -> String -> Set
--- subset set subName = Set subName $ Superset set
-
--- setLit :: String
--- setLit = "Set"
-
--- genSet :: [String] -> Node
--- genSet tags = Object Definition (setTags tags)
-
 -- no puns intended
 -- setTags :: [String] -> [String]
 -- setTags tags = if setLit `elem` tags then tags else setLit : tags
@@ -97,19 +44,21 @@ isSet :: Node -> Bool
 isSet (Set {}) = True
 isSet _ = False
 
--- intersectFnDef :: Node
--- intersectFnDef = Binary universal universal universal []
+intersectFnDef :: Node
+intersectFnDef = Binary universal universal universal []
 
--- intersect :: Record -> Record -> Context
--- intersect (nameA, a) (nameB, b)
---   | isSet a && isSet b = do
---     let partialIntersect = Unary (App intersectFnDef a) universal universal []
---     let newName = nameA ++ " ∩ " ++ nameB
---     let newNode = Set (App partialIntersect b) (setTags $ tags a ++ tags b)
---     addNewNode newName newNode
---     addNewStatement (newNode `isSubsetOf` a)
---     addNewStatement (newNode `isSubsetOf` b)
---   | otherwise = return ()
+intersect :: Record -> Record -> Context
+intersect (nameA, a) (nameB, b)
+  | isSet a && isSet b = do
+    (nodes, _) <- get
+    let apply' = apply nodes
+    let application = apply' (apply' intersectFnDef a) b
+    let newName = nameA ++ " ∩ " ++ nameB
+    let newNode = Set (Type application) (tags a ++ tags b)
+    addNewNode newName newNode
+    addNewStatement (newNode `isSubsetOf` a)
+    addNewStatement (newNode `isSubsetOf` b)
+  | otherwise = return ()
 
 -- unionFnDef :: Node
 -- unionFnDef = Binary universal universal universal []
@@ -159,15 +108,14 @@ isSet _ = False
 --   addNewNode (BinOp a b RelCompl) 
 -- complement _ _ = return ()
 
-
 subsetFnDef :: Node
-subsetFnDef = Unary Definition universal universal []
+subsetFnDef = Relation universal universal []
 
 subset :: String -> Record  -> Context
-subset name (nameA, a@(Set def tags _)) = do
+subset name (nameA, a@(Set def tags)) = do
     (nodes, idGen) <- get
-    let newId = idGen + 1
-    let newNode = Set def tags newId
+    let newId = idGen
+    let newNode = Set def tags
     let newStatement = newNode `isSubsetOf` a
     addNewNode name newNode
     addNewStatement newStatement
@@ -193,93 +141,24 @@ isSubsetOf a b =
 
 isSubsetOf' :: Graph -> Node -> Node -> Bool
 isSubsetOf' graph a b =
-  let f = (==) (a `isSubsetOf` b) in
-  case findFirst f graph of
+  case findFirst (== a `isSubsetOf` b) graph of
     Just _ -> True
     Nothing -> False
 
 universal :: Node
-universal = Set Universal [] 1
+universal = Set Universal []
 
 empty :: Node
-empty = Set Empty [] 0
+empty = Set Empty []
 
--- setOfDirectProducts :: Node
--- setOfDirectProducts = Object Definition (setTags ["setOfDirectProducts"])
+setOfDirectProducts :: Node
+setOfDirectProducts = Set (Type $ Tuple [universal, universal] []) []
 
 -- setOfPowersets :: Node
 -- setOfPowersets = Object Definition (setTags ["setOfSets"])
 
 -- newNameFrom :: [Node] -> String -> String
 -- newNameFrom sets binop = intercalate binop (fmap name sets)
-
--- union :: [Set] -> State Int Set
--- union [] = return empty
--- union [x] = return x
--- union (x : xs) = do
---   (Set n' e' v' p') <- union xs
---   (Set xn xe xv xp) <- rename v' e' x
---   let newN = xn ++ " ∪ " ++ n'
---   if length e' == 1 && length xe == 1 then
---     return $ Set newN xe (xv + v') (Or xp p')
---   else if length e' == 2 && length xe == 2 then do
---     put v'
---     newP <- unionOn2_tuple p' xp
---     return $ Set newN xe (xv + v') newP
---   else return empty
---   -- rest <- union xs
---   -- if rest == empty then return x
---   -- else if x == empty then return rest
---   -- else if length (expression x) > length (expression rest) then return x
---   -- else if length (expression x) < length (expression rest) then return rest
---   -- else do
-
---     -- let offset = variables rest in
---     -- Set (name x ++ " ∪ " ++ name rest)
---     --     (expression x)
---     --     (variables x + variables rest)
---     --     ExpFalse 
---     where
---       unionOn2_tuple (TupleAnd a c) tupB = do
---         acc <- (get :: State Int Int)
---         let (TupleAnd b d) = renameP (+ acc) tupB
---         return $ ((a `minus` b) `And` c) `Or`
---                  ((a `And` b) `And` (c `Or` d)) `Or`
---                  ((b `minus` a) `And` d)
---       -- code should never take this path
---       unionOn2_tuple _ _ = return ExpFalse
---       minus a b = And a (Not b)
---     --   unionOnn_tuple (TupleAnd a a') (TupleAnd b d') = undefined 
--- -- Set (name a ++ " ∪ " ++ name b) (From [pa, pb] Or)
-
--- relCompl :: Set -> Set -> Set
--- relCompl a b
---   -- let c = case cardinal a of
---   --         Finite (Size f1) -> 
---   --           let rangeFrom = case cardinal b of
---   --                           (Finite (Size f2)) -> f1 >- f2
---   --                           (Finite (Range r1 r2)) -> f1 >- r2
---   --                           _ -> 0
---   --           in Finite $ Range rangeFrom f1
---   --         Finite (Range r1' r2') -> 
---   --           let rangeFrom = case cardinal b of
---   --                           (Finite (Size f2)) -> r1' >- f2
---   --                           (Finite (Range r1 r2)) -> r1' >- r2
---   --                           _ -> 0
---   --           in Finite $ Range rangeFrom r1'
---   --         ca -> ca
---   -- in
---   | expression a == expression b && variables a == variables b =
---     Set (name a ++ " - " ++ name b) (expression a) (variables a)
---       (And (property a) $ Not $ renameP (+ variables a) $ property b) --c
---   | otherwise = a
-
--- -- >>> evalState [] (getSimpleSet "A")
--- -- >>> 
--- -- Couldn't match type: [a0]
--- --                with: StateT (State Labels Set) Identity a
--- -- Expected: State (State Labels Set) a
--- --   Actual: [a0]
 
 -- -- "e" only exists in the local scope, 
 -- -- no need to dynamically generate names for it
@@ -368,4 +247,20 @@ empty = Set Empty [] 0
 -- isSubset :: Set -> Set -> Bool
 -- isSubset = undefined 
 
-
+apply :: Graph -> Node -> Node -> Node
+apply nodes binop@(Binary l r o ts) v = 
+  if isSubsetOf' nodes v l then
+    Unary (App binop v) r o ts
+  else error "apply binary"
+apply nodes un@(Unary u v o ts) v' = 
+  if isSubsetOf' nodes v' v then o
+  else error "apply unary"
+apply nodes rel@(Relation l r ts) v =
+  if isSubsetOf' nodes v l then 
+    FixedRelation (App rel v) r ts
+  else error "apply relation"
+apply nodes fixed@(FixedRelation u r ts) v=
+  if isSubsetOf' nodes r v then
+    Statement (App fixed v) ts
+  else error "apply fixed"
+apply _ _ _ = error "apply no match" 

@@ -1,5 +1,4 @@
 module Mapping where
-import Node (Node)
 
 -- data Bijectivity = Injective | Surjective | Bijective | None
 
