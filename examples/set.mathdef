@@ -36,7 +36,7 @@ AB is finite set AB where
     AB is A intersect B
 
 > g := A -> B
-g: finite Set A -> Set B
+g is finite Set A -> Set B
 
 > g(A intersect B)
 finite Set B' where
@@ -47,11 +47,10 @@ ab is element in Set3 where
     Set3 is A intersect B
 
 > g(ab)
-e4 is element in B where
-    e4 is g(ab)
+element in B
 
 > A cross B
-set6 is Set typeof (a, b) where
+Set typeof (a, b) where
     a is in A
     b is in B
 
@@ -63,3 +62,15 @@ Indeed
 
 > A isrelatedto C
 Not quite
+
+> f := A -> B -> C
+f is finite Set A -> Set B -> Set C
+
+> f(ab)
+Set B -> Set C
+
+> f(ab, B)
+Set C
+
+> f(ab, ab)
+element in C

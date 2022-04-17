@@ -2,6 +2,8 @@ module BinaryOperation where
 import Set
 import Node
 import ContextState
+import Mapping
+
 -- import Relation
 
 -- data Associativity = Assoc | NotAssoc
@@ -38,5 +40,22 @@ relCompose (name1, Relation f1 t1 tags1) (name2, Relation f2 t2 tags2) = do
   else error "relationalCompose: mismatch"
 relCompose _ _ = error "relationalCompose: not relations"
 
-  
+mapComposeFnDef :: Node
+mapComposeFnDef = Binary undefined undefined undefined []
+
+mapCompose :: Record -> Record -> PContext Record
+mapCompose (name1, f@(Unary def1 d1 r1 tags1)) (name2,g@(Unary def2 d2 r2 tags2)) = do
+  nodes <- getNodes 
+  isSubset <- r1 `isSubsetOf'` d2
+  if isSubset then do
+    let name = name1 ++ "compose" ++ name2
+    application <- applyR'ed f mapComposeFnDef >>= applyR'ed g
+    let newMapping = Unary undefined d1 r2 (combineTags tags1 tags2)
+    return $ record name newMapping
+  else error "mapcompose: mismatch"
+  where combineTags t1 t2
+          | elem surjectiveTag t1 && elem surjectiveTag t2 = [surjectiveTag]
+          | elem injectiveTag t1 && elem injectiveTag t2 = [injectiveTag]
+          | otherwise = []
+mapCompose _ _ = error "mapcompose: not mappings"
 
