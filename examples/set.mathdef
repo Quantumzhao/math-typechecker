@@ -1,38 +1,65 @@
 > A := finite Set
-A: finite Set A
+A is finite Set A
 
 > B := Set
-B: Set B
+B is Set B
 
-> C := Set Natural
-C: Set Natural
+> C := Natural
+C is Natural
 
 > PB := powerSet B
-PB: Set of S where
-    S subset B
+PB is Set typeof s where
+    s is subset of B
+
+> moreinfo PB please
+------ My pleasure ------
+PB is Set typeof s where
+    s is subset of B where
+        B is Set B
 
 > f := PB -> B
-f: Set of S -> Set where
-    s subset B
+f is Set PB -> Set B
 
-> A intersect B
-finite Set AB where
-    AB = A intersect B
+> moreinfo f please
+------ My pleasure ------
+f is Set PB -> Set B where
+PB is Set typeof s where
+    s is subset of B
+    B is Set B
+
+> AB := A intersect B
+AB is finite Set AB
+
+> moreinfo AB please
+------ My pleasure ------
+AB is finite set AB where
+    AB is A intersect B
 
 > g := A -> B
 g: finite Set A -> Set B
 
 > g(A intersect B)
 finite Set B' where
-    B' subset B
+    B' is subset of B
 
 > ab := some in A intersect B
-element in A and element in B
+ab is element in Set3 where
+    Set3 is A intersect B
 
 > g(ab)
-element in B
+e4 is element in B where
+    e4 is g(ab)
 
 > A cross B
-> Set of (a, b) where
-    a in A
-    b in B
+set6 is Set typeof (a, b) where
+    a is in A
+    b is in B
+
+> ArB := A isrelatedto B
+A isrelatedto B by ArB for all in A, for all in B
+
+> A isrelatedto B
+Indeed
+
+> A isrelatedto C
+Not quite
