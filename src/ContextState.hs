@@ -9,7 +9,9 @@ import Node
 
 type Record = (String, Node)
 type Graph = Map String Node
-type Context = State (Graph, Int) ()
+type GraphI = (Graph, Int)
+type PContext = State GraphI
+type Context = PContext ()
 
 {-| accepts any node except statements. 
     In which case, use `addNewStatement` instead -}
@@ -46,6 +48,14 @@ findFirst f map =
       if f x then Just x
       else findFirst' f xs
     findFirst' f [] = Nothing
+
+getNodes :: State (Graph, Int) Graph
+getNodes = do
+  (nodes, _) <- get
+  return nodes
+
+record :: String -> Node -> Record
+record = (,)
 
 -- addNewEdge :: Edge -> GraphState
 -- addNewEdge edge = do

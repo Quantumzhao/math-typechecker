@@ -1,11 +1,9 @@
 module Mapping where
 
--- data Bijectivity = Injective | Surjective | Bijective | None
-
--- data EquivalenceRelation = Equiv | NotEquiv 
-
--- data Partiality = None | Partial
-
+import Node
+import ContextState
+import Control.Monad.State.Lazy
+import Set
 -- data Mapping = Map Node Node Bijectivity
 
 -- compose :: Mapping -> Mapping -> Maybe Mapping
@@ -19,3 +17,17 @@ module Mapping where
 --     getBijectivity Injective Surjective = undefined 
 --     getBijectivity _ _ = None
 
+newMapping :: String -> Node -> Node -> [String] -> Context
+newMapping name from to tags = do
+  let mapping = Unary Definition from to tags
+  addNewNode name mapping
+
+compose :: String -> Node -> Node -> Context
+compose name (Unary ff fDomain fRange ft) (Unary gf gDomain gRange gt) = do 
+  (nodes, _) <- get
+  isSubset <- fRange `isSubsetOf'` gDomain
+  if isSubset then do
+    let newMap = Unary Definition fDomain gRange []
+    addNewNode name newMap 
+  else error "compose: domain and range mismatch"
+compose _ _ _ = error "compose: not mappings"

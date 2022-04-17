@@ -45,11 +45,6 @@ data Node
     out :: Node,
     tags :: [String]
   }
-  -- | Object {
-  --   _type :: String,
-  --   from :: UpperStructure,
-  --   tags :: [String]
-  -- }
   | Set {
     defOf :: ElementTemplate,
     tags :: [String]
@@ -67,7 +62,7 @@ data Node
     rValue :: Node,
     tags :: [String]
   }
-  | FixedRelation {
+  | Class {
     from :: UpperStructure,
     value :: Node,
     tags :: [String]
