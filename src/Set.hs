@@ -10,6 +10,7 @@ import qualified Data.List as List
 import Data.List (intersperse, intercalate)
 import ContextState
 import Node
+import Data.Map
 
 -- -- p: property
 -- -- t: tag
@@ -46,7 +47,7 @@ intersectFnDef = Binary universal universal universal []
 intersect :: Record -> Record -> PContext Record
 intersect (nameA, a) (nameB, b)
   | isSet a && isSet b = do
-    (nodes, _) <- get
+    nodes <- getNodes 
     application <- applyR'ed a intersectFnDef >>= applyR'ed b
     let newName = nameA ++ " ∩ " ++ nameB
     let newNode = Set (Type application) (tags a ++ tags b)
@@ -138,38 +139,41 @@ powersetFnDef =
   let allSubsets = Class (App subsetFnDef universal) universal [] in
   Unary Definition universal (Set (Type allSubsets) []) []
 
-powerset :: Record -> Context
+powerset :: Record -> PContext Record
 powerset (name, set)
   | isSet set = do
     (nodes, _) <- get
     application <-  set `applyR'ed` powersetFnDef
     let newNode = Set (Type application) []
     let newName = "P(" ++ name ++ ")"
-    addNewNode newName newNode
     addNewStatement (set `isSubsetOf` newNode)
-  | otherwise = return ()
+    return $ record newName newNode
+  | otherwise = error "powerset: not a set"
 
 applyR'ed :: Node -> Node -> PContext Node
-applyR'ed binop@(Binary l r o ts) v = do
-  nodes <- getNodes
+applyR'ed v binop@(Binary l r o ts) = do
   subset <- isSubsetOf' v l  
   if subset then
     return $ Unary (App binop v) r o ts
   else error "apply binary"
-applyR'ed un@(Unary u v o ts) v' = do
+applyR'ed v' un@(Unary u v o ts) = do
   subset <- isSubsetOf' v' v
   if subset then return o
   else error "apply unary"
-applyR'ed rel@(Relation l r ts) v = do
+applyR'ed v rel@(Relation l r ts) = do
   subset <- isSubsetOf' v l
   if subset then 
     return $ Class (App rel v) r ts
   else error "apply relation"
-applyR'ed fixed@(Class u r ts) v = do
+applyR'ed v fixed@(Class u r ts) = do
   subset <- isSubsetOf' r v 
   if subset then
     return $ Statement (App fixed v) ts
   else error "apply fixed"
 applyR'ed _ _ = error "apply no match" 
 
-
+getNewSet :: String -> [String] -> PContext Record
+getNewSet name tags = do
+  let newSet = Set APriori tags
+  addNewStatement (newSet `isSubsetOf` universal)
+  return $ record name newSet

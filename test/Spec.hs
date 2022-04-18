@@ -1,15 +1,20 @@
-import Set
 import Prelude
 import Common
 import Control.Monad.State.Lazy
+import ContextState
+import Node
+import Set
+import qualified Data.Map
 
 main :: IO ()
-main = do 
+main = do
   putStrLn "Test suite not yet implemented"
-  putStrLn test_Cross
+  print test_Cross
 
 test_Cross = 
-  let a = evalState (getSimpleSet "A") [] in
-  let b = evalState (getSimpleSet "B") [] in
-  show $ cross [a, b]
+  let state = do
+              a <- getNewSet "A" []
+              b <- getNewSet "B" []
+              powerset a
+  in evalState state (Data.Map.empty, 0)
 

@@ -15,12 +15,13 @@ type Context = PContext ()
 
 {-| accepts any node except statements. 
     In which case, use `addNewStatement` instead -}
-addNewNode :: String -> Node -> Context
+addNewNode :: String -> Node -> PContext Record
 addNewNode name node = do
   (nodes, idGen) <- get
   name' <- nextName name nodes
   let nodes' = insert name' node nodes
   put (nodes', idGen)
+  return $ record name' node
   where nextName name map
           | not $ member name map = return name
           | otherwise = do 

@@ -21,12 +21,9 @@ description:         Please see the README on GitHub at <https://github.com/Quan
 
 dependencies:
 - base >= 4.7 && < 5
-- random >= 0.1
-- uuid >= 0.1
-- MonadRandom >= 0.1
 - mtl >= 0.1
-- utility-ht >= 0.1
-- containers >= 0.1
+- utility-ht >= 0.0
+- containers >= 0.0
 
 library:
   source-dirs: src
@@ -51,4 +48,4 @@ tests:
     - -rtsopts
     - -with-rtsopts=-N
     dependencies:
-    - math-typechecker
+    - math-typechecker >= 0.0

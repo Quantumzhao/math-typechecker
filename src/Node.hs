@@ -71,7 +71,7 @@ data Node
     from :: UpperStructure,
     tags :: [String]
   }
-  deriving (Eq)
+  deriving (Eq, Show)
 
 data UpperStructure
   = App {
@@ -79,7 +79,7 @@ data UpperStructure
     fixed :: Node
   }
   | Definition
-  deriving (Eq)
+  deriving (Eq, Show)
 
 data ElementTemplate 
   -- create from a defined set of elements
@@ -88,4 +88,6 @@ data ElementTemplate
   | Type Node
   | Universal
   | Empty
-  deriving (Eq)
+  -- given by definition
+  | APriori
+  deriving (Eq, Show)

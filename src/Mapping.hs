@@ -30,3 +30,4 @@ newMapping :: String -> Node -> Node -> [String] -> Context
 newMapping name from to tags = do
   let mapping = Unary Definition from to tags
   addNewNode name mapping
+  return ()
