@@ -42,19 +42,18 @@ g is finite Set A -> Set B
 finite Set B' where
     B' is subset of B
 
-> ab := some in A intersect B
-ab is element in Set3 where
-    Set3 is A intersect B
+> ab := element in A intersect B
+ab is element in A intersect B
 
 > g(ab)
-element in B
+g(ab) is element in B
 
 > A cross B
 Set typeof (a, b) where
     a is in A
     b is in B
 
-> ArB := A isrelatedto B
+> ArB := A ~ B
 A isrelatedto B by ArB for all in A, for all in B
 
 > A isrelatedto B
@@ -74,3 +73,22 @@ Set C
 
 > f(ab, ab)
 element in C
+
+> g := D -> A
+Error: D is not defined
+
+> exit please
+
+> Ar := A ~ where ~ is proper
+Ar is a 
+
+> pSet := A -> B where 
+    B is Set typeof s where 
+        s is subset of A
+pSet is A -> B  where 
+    B is Set typeof s where 
+        s is subset of A
+
+> pSet(D) where D is subset of A
+Set typeof s where 
+    s is subset of D
