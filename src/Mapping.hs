@@ -17,17 +17,17 @@ import Set
 --     getBijectivity Injective Surjective = undefined 
 --     getBijectivity _ _ = None
 
-setOfMappings :: Node
-setOfMappings = Set (Type (Unary Definition universal universal [])) []
+-- setOfMappings :: Node
+-- setOfMappings = Set (Type (Unary Definition universal universal [])) []
 
--- no bijective tag because it should be replaced by injective and surjective in the AST
-surjectiveTag :: String
-surjectiveTag = "surjective"
-injectiveTag :: String
-injectiveTag = "injective"
+-- -- no bijective tag because it should be replaced by injective and surjective in the AST
+-- surjectiveTag :: String
+-- surjectiveTag = "surjective"
+-- injectiveTag :: String
+-- injectiveTag = "injective"
 
-newMapping :: String -> Node -> Node -> [String] -> Context
-newMapping name from to tags = do
-  let mapping = Unary Definition from to tags
-  addNewNode name mapping
-  return ()
+-- newMapping :: String -> Node -> Node -> [String] -> Context
+-- newMapping name from to tags = do
+--   let mapping = Unary Definition from to tags
+--   addNewNode name mapping
+--   return ()

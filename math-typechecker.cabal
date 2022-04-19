@@ -31,9 +31,13 @@ library
       Group
       Mapping
       Node
+      Printer.FormatDef
+      Printer.Print2String
+      Printer.Simplify
       Relation
       Set
       Statement
+      Tags
       Unit
   other-modules:
       Paths_math_typechecker

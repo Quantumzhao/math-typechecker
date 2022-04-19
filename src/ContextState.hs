@@ -1,4 +1,3 @@
-{-# LANGUAGE FlexibleContexts #-}
 module ContextState where
 import Common
 import Data.Map
@@ -7,21 +6,19 @@ import Control.Monad.Except
 import Control.Monad.State
 import Node
 
-type Record = (String, Node)
-type Graph = Map String Node
+type Graph = [Node]
 type GraphI = (Graph, Int)
 type PContext = State GraphI
 type Context = PContext ()
 
 {-| accepts any node except statements. 
     In which case, use `addNewStatement` instead -}
-addNewNode :: String -> Node -> PContext Record
-addNewNode name node = do
+addNewNode :: Node -> PContext Node
+addNewNode node = do
   (nodes, idGen) <- get
-  name' <- nextName name nodes
-  let nodes' = insert name' node nodes
+  let nodes' = node : nodes
   put (nodes', idGen)
-  return $ record name' node
+  return node
   where nextName name map
           | not $ member name map = return name
           | otherwise = do 
@@ -35,28 +32,28 @@ addNewStatement stmt = do
   (nodes, idGen) <- get
   let name = "statement" ++ show idGen
   let idGen' = idGen + 1
-  let nodes' = insert name stmt nodes
+  let nodes' = stmt : nodes
   put (nodes', idGen')
 
 move2NextId :: Context
 move2NextId = modify (\(ns, id) -> (ns, id + 1))
 
 findFirst :: (Node -> Bool) -> Graph -> Maybe Node
-findFirst f map =
-  findFirst' f (elems map)
-  where 
-    findFirst' f (x : xs) = 
-      if f x then Just x
-      else findFirst' f xs
-    findFirst' f [] = Nothing
+findFirst f (x : xs) = 
+  if f x then Just x
+  else findFirst f xs
+findFirst f [] = Nothing
 
-getNodes :: State (Graph, Int) Graph
+getNodes :: PContext [Node]
 getNodes = do
   (nodes, _) <- get
   return nodes
 
-record :: String -> Node -> Record
-record = (,)
+getNewId :: PContext Int
+getNewId = do
+  (nodes, id) <- get
+  put (nodes, id + 1)
+  return id
 
 -- addNewEdge :: Edge -> GraphState
 -- addNewEdge edge = do
@@ -66,3 +63,5 @@ record = (,)
 --   put (Context ns newMap nextC)
 --   return ()
 
+anonymous :: String
+anonymous = ""

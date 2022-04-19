@@ -1,6 +1,8 @@
-> A := finite Set
+> exist A in Universal, A := finite Set
 A is finite Set A
 
+-- when a set is defined to be a subset of Universal, 
+-- can use this shorthand
 > B := Set
 B is Set B
 
@@ -9,13 +11,13 @@ C is Natural
 
 > PB := powerSet B
 PB is Set typeof s where
-    s is subset of B
+    forall s in PB, s isSubsetOf B
 
 > moreinfo PB please
 ------ My pleasure ------
 PB is Set typeof s where
-    s is subset of B where
-        B is Set B
+    forall s in PB, s is subset of B where
+        exist B in Universal, B is Set B
 
 > f := PB -> B
 f is Set PB -> Set B
@@ -23,8 +25,8 @@ f is Set PB -> Set B
 > moreinfo f please
 ------ My pleasure ------
 f is Set PB -> Set B where
-PB is Set typeof s where
-    s is subset of B
+    PB is Set typeof s where
+        forall s in PB, s is subset of B 
     B is Set B
 
 > AB := A intersect B
@@ -57,10 +59,7 @@ Set typeof (a, b) where
 A isrelatedto B by ArB for all in A, for all in B
 
 > A isrelatedto B
-Indeed
-
-> A isrelatedto C
-Not quite
+Invalid Input
 
 > f := A -> B -> C
 f is finite Set A -> Set B -> Set C
