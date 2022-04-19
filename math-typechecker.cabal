@@ -29,11 +29,14 @@ library
       Common
       ContextState
       Group
+      Interpreter.Evaluate
+      Interpreter.Parser
+      Interpreter.Tokens
       Mapping
       Node
+      Printer.Format
       Printer.FormatDef
       Printer.Print2String
-      Printer.Simplify
       Relation
       Set
       Statement

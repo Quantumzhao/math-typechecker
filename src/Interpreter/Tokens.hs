@@ -1,4 +1,4 @@
-module Tokens where
+module Interpreter.Tokens where
 
 data TokenBase
 --------- Set -------------------------
