@@ -5,32 +5,38 @@ module Printer.FormatDef where
   
 data Expr 
   = SetExpr {
-    qualifier :: QualifierExpr,
+    symbol :: String,
+    name :: String,
+    tags :: [String],
     body :: SetBodyExpr,
     wheres :: WhereExpr
   }
   | MappingExpr {
+    name :: String,
+    tags :: [String],
+    left :: SetBodyExpr,
+    right :: SetBodyExpr,
     qualifier :: QualifierExpr,
-    left :: String,
-    right :: String,
     wheres :: WhereExpr
   }
   | RelExpr {
-    left :: String, 
-    right :: String,
+    left :: SetBodyExpr, 
+    right :: SetBodyExpr,
     by :: String, 
+    tags :: [String],
     forallLeft :: QualifierExpr,
     forallRight :: QualifierExpr,
     wheres :: WhereExpr
   }
-  | ObjectEXpr {
-    object :: String,
+  | ObjectExpr {
+    name :: String,
     set :: String,
     wheres :: WhereExpr
   }
   | TupleExpr {
-    left :: String,
-    right :: String,
+    name :: String,
+    first :: String,
+    second :: String,
     wheres :: WhereExpr
   }
 

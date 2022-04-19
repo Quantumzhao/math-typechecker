@@ -1,4 +1,4 @@
-> exist A in Universal, A := finite Set
+> A := finite Set, for some A in Universal
 A is finite Set A
 
 -- when a set is defined to be a subset of Universal, 
@@ -10,7 +10,7 @@ B is Set B
 C is Natural
 
 > PB := powerSet B
-PB is Set typeof s where
+PB is Set type of s where
     forall s in PB, s isSubsetOf B
 
 > moreinfo PB please
@@ -25,7 +25,7 @@ f is Set PB -> Set B
 > moreinfo f please
 ------ My pleasure ------
 f is Set PB -> Set B where
-    PB is Set typeof s where
+    PB is Set type of s where
         forall s in PB, s is subset of B 
     B is Set B
 
@@ -84,10 +84,23 @@ Ar is a
 > pSet := A -> B where 
     B is Set typeof s where 
         s is subset of A
-pSet is A -> B  where 
+pSet is A -> B where 
     B is Set typeof s where 
         s is subset of A
 
 > pSet(D) where D is subset of A
 Set typeof s where 
     s is subset of D
+
+> (a, b) where 
+    a is element in A
+    b is element in B
+(a, b) is element in A cross B
+
+> a, b, c := element in Universal
+a is element in Universal
+b is element in Universal
+c is element in Universal
+
+> A := {a, b, c}
+A is Set A consisting of a, b, c
