@@ -5,7 +5,6 @@ module Printer.FormatDef where
   
 data Expr 
   = SetExpr {
-    symbol :: String,
     name :: String,
     tags :: [String],
     body :: SetBodyExpr,
@@ -16,7 +15,6 @@ data Expr
     tags :: [String],
     left :: SetBodyExpr,
     right :: SetBodyExpr,
-    qualifier :: QualifierExpr,
     wheres :: WhereExpr
   }
   | RelExpr {
@@ -42,7 +40,7 @@ data Expr
 
 data QualifierExpr 
   = BlankQualifier
-  | ForAll String String
+  | ForAll String
   | Exist String String
 
 data SetBodyExpr
