@@ -24,6 +24,7 @@ dependencies:
 - mtl >= 0.1
 - utility-ht >= 0.0
 - containers >= 0.0
+- megaparsec >= 0.0
 
 library:
   source-dirs: src

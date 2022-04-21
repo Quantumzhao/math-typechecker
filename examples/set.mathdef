@@ -1,13 +1,13 @@
-> A := finite Set, for some A in Universal
+> A := finite Set
 A is finite Set A
 
--- when a set is defined to be a subset of Universal, 
--- can use this shorthand
 > B := Set
 B is Set B
 
 > C := Natural
 C is Natural
+
+> powerSet := AnySet -> Set of s where s is subset of AnySet
 
 > PB := powerSet B
 PB is Set type of s where
