@@ -29,6 +29,7 @@ library
       Common
       ContextState
       Group
+      Interpreter.AST
       Interpreter.Evaluate
       Interpreter.Parser
       Interpreter.Tokens

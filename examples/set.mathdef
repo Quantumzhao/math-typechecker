@@ -13,8 +13,7 @@ C is Natural
 PB is Set type of s where
     forall s in PB, s isSubsetOf B
 
-> moreinfo PB please
------- My pleasure ------
+> moreinfo PB
 PB is Set typeof s where
     forall s in PB, s is subset of B where
         exist B in Universal, B is Set B
@@ -22,8 +21,7 @@ PB is Set typeof s where
 > f := PB -> B
 f is Set PB -> Set B
 
-> moreinfo f please
------- My pleasure ------
+> moreinfo f
 f is Set PB -> Set B where
     PB is Set type of s where
         forall s in PB, s is subset of B 
@@ -32,8 +30,7 @@ f is Set PB -> Set B where
 > AB := A intersect B
 AB is finite Set AB
 
-> moreinfo AB please
------- My pleasure ------
+> moreinfo AB
 AB is finite set AB where
     AB is A intersect B
 
@@ -76,7 +73,7 @@ element in C
 > g := D -> A
 Error: D is not defined
 
-> exit please
+> exit
 
 > Ar := A ~ where ~ is proper
 Ar is a 

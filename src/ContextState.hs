@@ -1,3 +1,5 @@
+{-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE FlexibleContexts #-}
 module ContextState where
 import Common
 import Data.Map
@@ -10,6 +12,10 @@ type Graph = [Node]
 type GraphI = (Graph, Int)
 type PContext = State GraphI
 type Context = PContext ()
+
+type T m1 = m1
+
+type Test m a = (MonadState GraphI m, MonadError (String, String) m) => m a
 
 {-| accepts any node except statements. 
     In which case, use `addNewStatement` instead -}
@@ -48,6 +54,15 @@ getNodes :: PContext [Node]
 getNodes = do
   (nodes, _) <- get
   return nodes
+
+dummy :: m => (T (Maybe m)) String
+dummy = Just ""
+
+-- getNodes' :: Test [Node]
+-- getNodes' = do
+--   (nodes, _) <- get
+--   return nodes
+
 
 getNewId :: PContext Int
 getNewId = do
