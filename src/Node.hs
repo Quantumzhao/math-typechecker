@@ -37,32 +37,29 @@ data Node
     domain :: Node, 
     range :: Node,
     tags :: [String], 
-    nameOf :: String, 
-    id :: Int
+    key :: Identifier
   }
-  | Set {
+  | Collection {
     defOf :: ElementTemplate,
     tags :: [String], 
-    nameOf :: String, 
-    id :: Int
+    key :: Identifier
   }
-  | Tuple {
+  | DirectProduct {
     entries :: (Node, Node),
-    nameOf :: String, 
-    id :: Int
+    key :: Identifier
   }
-  -- the most generic type of objects
+  -- the most generic type of objects, can be any type
   | Object {
-    nameOf :: String, 
-    id :: Int
+    key :: Identifier
   } 
   | Relation {
     domain :: Node,
     codomain :: Node,
     tags :: [String], 
-    nameOf :: String, 
-    id :: Int
+    key :: Identifier
   }
+  -- template
+  | AnyObject
   deriving (Eq, Show)
 
 data UpperStructure
@@ -73,11 +70,21 @@ data UpperStructure
   | Definition
   deriving (Eq, Show)
 
+data Identifier
+  = Unique {
+    nameOf :: String,
+    id :: String
+  }
+  | Anonymous
+  deriving (Show)
+
+instance Eq Identifier where
+  (==) (Unique n i) (Unique n' i') = n == n' && i == i'
+  (==) _ _ = False
+
 data ElementTemplate 
   -- create from a defined set of elements
-  = Collection [Node]
+  = Multiple [Node]
   -- for all ... in ..., be in this form
   | FormOf Node
-  | Universal
-  | Empty
   deriving (Eq, Show)

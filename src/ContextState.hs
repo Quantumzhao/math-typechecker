@@ -55,20 +55,17 @@ getNodes = do
   (nodes, _) <- get
   return nodes
 
-dummy :: m => (T (Maybe m)) String
-dummy = Just ""
-
 -- getNodes' :: Test [Node]
 -- getNodes' = do
 --   (nodes, _) <- get
 --   return nodes
 
 
-getNewId :: PContext Int
+getNewId :: PContext String
 getNewId = do
   (nodes, id) <- get
   put (nodes, id + 1)
-  return id
+  return $ show id
 
 -- addNewEdge :: Edge -> GraphState
 -- addNewEdge edge = do

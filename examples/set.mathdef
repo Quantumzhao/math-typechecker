@@ -101,3 +101,5 @@ c is element in Universal
 
 > A := {a, b, c}
 A is Set A consisting of a, b, c
+
+> h := A -> B, -> is injective structural

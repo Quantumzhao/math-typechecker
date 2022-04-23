@@ -13,125 +13,99 @@ import Node
 import Data.Map
 import Tags
 
+setLit = "Set"
+
 isSet :: Node -> Bool
-isSet (Set {}) = True
+isSet (Collection _ tags _) = setLit `elem` tags
 isSet _ = False
 
-intersectFnDef :: Node
-intersectFnDef = Mapping setOfDirectProducts universal [] "intersect" 0
 
-intersect :: Node -> Node -> PContext Node
-intersect a b
-  | isSet a && isSet b = do
-    id <- getNewId 
-    ab <- cross a b
-    application <- substitute intersectFnDef ab
-    let newName = nameOf a ++ " intersect " ++ nameOf b
-    let newNode = Set (FormOf application) (tags a ++ tags b) newName id
-    addNewStatement (newNode `isSubsetOf` a)
-    addNewStatement (newNode `isSubsetOf` b)
-    return newNode
-  | otherwise = error "intersect: not sets"
+-- unionFnDef :: Node
+-- unionFnDef = Mapping setOfDirectProducts universal [] "union" 0
 
-unionFnDef :: Node
-unionFnDef = Mapping setOfDirectProducts universal [] "union" 0
+-- union :: Node -> Node -> PContext Node
+-- union a b
+--   | isSet a && isSet b = do
+--     id <- getNewId 
+--     ab <- cross a b
+--     application <- substitute unionFnDef ab
+--     let newName = nameOf a ++ " union " ++ nameOf b
+--     let newNode = Set (FormOf application) [] newName id
+--     addNewStatement (a `isSubsetOf` newNode)
+--     addNewStatement (b `isSubsetOf` newNode)
+--     return newNode
+--   | otherwise = error "union: not sets"
 
-union :: Node -> Node -> PContext Node
-union a b
-  | isSet a && isSet b = do
-    id <- getNewId 
-    ab <- cross a b
-    application <- substitute unionFnDef ab
-    let newName = nameOf a ++ " union " ++ nameOf b
-    let newNode = Set (FormOf application) [] newName id
-    addNewStatement (a `isSubsetOf` newNode)
-    addNewStatement (b `isSubsetOf` newNode)
-    return newNode
-  | otherwise = error "union: not sets"
+-- complementFnDef :: Node
+-- complementFnDef = Mapping setOfDirectProducts universal [] " minus " 0
 
-crossFnDef :: Node
-crossFnDef = Mapping universal setOfDirectProducts [] anonymous 0
+-- complement :: Node -> Node -> PContext Node
+-- complement a b
+--   | isSet a && isSet b = do
+--     let newName = nameOf a ++ " - " ++ nameOf b
+--     id <- getNewId 
+--     ab <- cross a b
+--     application <- substitute complementFnDef ab
+--     let newNode = Set (FormOf application) (tags a) newName id
+--     addNewStatement (newNode `isSubsetOf` a)
+--     return newNode
+--   | otherwise = error "complement: not sets"
 
-cross :: Node -> Node -> PContext Node
-cross a b
-  | isSet a && isSet b = do
-    nodes <- getNodes 
-    id <- getNewId 
-    let newName = nameOf a ++ " cross " ++ nameOf b
-    let newNode = Set (FormOf $ Tuple (a, b) anonymous 0) [] newName id
-    return newNode
-  | otherwise = error "cross: not sets"
+-- subsetFnDef :: Node
+-- subsetFnDef = Relation universal universal [] "subset" 0
 
-complementFnDef :: Node
-complementFnDef = Mapping setOfDirectProducts universal [] " minus " 0
-
-complement :: Node -> Node -> PContext Node
-complement a b
-  | isSet a && isSet b = do
-    let newName = nameOf a ++ " - " ++ nameOf b
-    id <- getNewId 
-    ab <- cross a b
-    application <- substitute complementFnDef ab
-    let newNode = Set (FormOf application) (tags a) newName id
-    addNewStatement (newNode `isSubsetOf` a)
-    return newNode
-  | otherwise = error "complement: not sets"
-
-subsetFnDef :: Node
-subsetFnDef = Relation universal universal [] "subset" 0
-
-subset :: Node -> PContext Node
-subset a@(Set def tags nameA _) = do
-    (nodes, idGen) <- get
-    newId <- getNewId 
-    let newNode = Set def tags nameA newId
-    let newStatement = newNode `isSubsetOf` a
-    addNewStatement newStatement
-    return newNode
-subset _ = error "Set.subset: not a set"
+-- subset :: Node -> PContext Node
+-- subset a@(Collection def tags nameA _) = do
+--     (nodes, idGen) <- get
+--     newId <- getNewId 
+--     let newNode = Set def tags nameA newId
+--     let newStatement = newNode `isSubsetOf` a
+--     addNewStatement newStatement
+--     return newNode
+-- subset _ = error "Set.subset: not a set"
 
 {-| returns a statement actually -}
-isSubsetOf :: Node -> Node -> Node
-isSubsetOf a b = Relation a b orderedRel "subset" 0
+-- isSubsetOf :: Node -> Node -> Node
+-- isSubsetOf a b = Relation a b orderedRel "subset" 0
 
-isSubsetOf' :: Node -> Node -> PContext Bool
-isSubsetOf' a b = do
-  graph <- getNodes
-  case findFirst (== a `isSubsetOf` b) graph of
-    Just _ -> return True
-    Nothing -> return False
+-- isSubsetOf' :: Node -> Node -> PContext Bool
+-- isSubsetOf' a b = do
+--   graph <- getNodes
+--   case findFirst (== a `isSubsetOf` b) graph of
+--     Just _ -> return True
+--     Nothing -> return False
 
-getElement :: Node -> PContext Node
-getElement set@(Set def tags name id) = do
-  newId <- getNewId 
-  let e = case def of
-        Collection (x : xs) -> x
-        FormOf node -> node
-        Universal -> Object (show newId) newId
-        _ -> error "Set.getElement: empty set"
-  addNewStatement (e `isIn` set)
-  return e
-getElement _ = error "Set.getElement: not a set"
+-- getElement :: Node -> PContext Node
+-- getElement set@(Collection def tags name id) = do
+--   newId <- getNewId 
+--   let e = case def of
+--         Collection (x : xs) -> x
+--         FormOf node -> node
+--         Universal -> Object (show newId) newId
+--         _ -> error "Set.getElement: empty set"
+--   addNewStatement (e `isIn` set)
+--   return e
+-- getElement _ = error "Set.getElement: not a set"
 
 {-| returns a statement actually -}
-isIn :: Node -> Node -> Node
-isIn x set = Relation x set [] anonymous 0
+-- isIn :: Node -> Node -> Node
+-- isIn x set = Relation x set [] anonymous 0
 
-isIn' :: Node -> Node -> PContext Bool
-isIn' e set = do
-  nodes <- getNodes 
-  case findFirst (== e `isIn` set) nodes of
-    Just _ -> return True
-    Nothing -> return False
+-- isIn' :: Node -> Node -> PContext Bool
+-- isIn' e set = do
+--   nodes <- getNodes 
+--   case findFirst (== e `isIn` set) nodes of
+--     Just _ -> return True
+--     Nothing -> return False
 
-universal :: Node
-universal = Set Universal ["Universal"] "Universal" 0
+-- universal :: Node
+-- universal = Set Universal ["Universal"] "Universal" 0
 
-empty :: Node
-empty = Set Empty ["Empty"] "Empty" 0
+-- empty :: Node
+-- empty = Collection Empty ["Empty"] "Empty" 0
 
-setOfDirectProducts :: Node
-setOfDirectProducts = Set (FormOf $ Tuple (universal, universal) anonymous 0) [] "DirectProducts" 0
+-- setOfDirectProducts :: Node
+-- setOfDirectProducts = Collection (FormOf $ Tuple (universal, universal) anonymous 0) [] "DirectProducts" 0
 
 -- powersetFnDef :: Node
 -- powersetFnDef = 
@@ -175,17 +149,17 @@ setOfDirectProducts = Set (FormOf $ Tuple (universal, universal) anonymous 0) []
 --   else error "apply fixed"
 -- applyR'ed _ _ = error "apply no match" 
 
-getNewSet :: String -> [String] -> PContext Node
-getNewSet name tags = do
-  newSet <- subset universal
-  addNewStatement (newSet `isSubsetOf` universal)
-  return newSet
+-- getNewSet :: String -> [String] -> PContext Node
+-- getNewSet name tags = do
+--   newSet <- subset universal
+--   addNewStatement (newSet `isSubsetOf` universal)
+--   return newSet
 
-substitute :: Node -> Node -> PContext Node
-substitute x binop@(Mapping dom ran tags name id) = do
-  isSubset <- x `isSubsetOf'` dom
-  isElem <- x `isIn'` dom
-  newId <- getNewId 
-  if isSubset || isElem then return $ Mapping x ran tags name newId
-  else error "Set.substitute: not a subset of domain"
-substitute x _ = error "Set.substitute: not a mapping"
+-- substitute :: Node -> Node -> PContext Node
+-- substitute x binop@(Mapping dom ran tags name id) = do
+--   isSubset <- x `isSubsetOf'` dom
+--   isElem <- x `isIn'` dom
+--   newId <- getNewId 
+--   if isSubset || isElem then return $ Mapping x ran tags name newId
+--   else error "Set.substitute: not a subset of domain"
+-- substitute x _ = error "Set.substitute: not a mapping"
