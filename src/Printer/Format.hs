@@ -2,45 +2,45 @@ module Printer.Format where
 
 import Node hiding (tags)
 import Printer.FormatDef
-import ContextState (Graph)
+import ContextState
 import Set
 
 formatNode :: Node -> Graph -> Expr
-formatNode (Mapping domain range tags name _) nodes = 
+formatNode (Mapping domain range tags i) nodes = 
   let dWhere = getSimpleWhereExpr domain nodes in
   let rWhere = getSimpleWhereExpr range nodes in
   MappingExpr {
-    name = name,
+    name = getName i,
     tags = tags,
     left = formatSetBody domain,
     right = formatSetBody range,
     wheres = mergeWheres [dWhere, rWhere]
   }
-formatNode s@(Set def tags name _) nodes = 
+formatNode s@(Collection def tags i) nodes = 
   SetExpr {
-    name = name,
+    name = getName i,
     tags = tags,
     body = formatSetBody s,
     wheres = getSimpleWhereExpr s nodes
   } 
-formatNode t@(Tuple (left, right) name _) nodes = 
+formatNode t@(DirectProduct (left, right) i) nodes = 
   let lWhere = getSimpleWhereExpr (findParent left nodes) nodes in
   let rWhere = getSimpleWhereExpr (findParent right nodes) nodes in
   TupleExpr {
-    name = name,
-    first = nameOf left,
-    second = nameOf right,
+    name = getName i,
+    first = nameOf $ key left,
+    second = nameOf $ key right,
     wheres = mergeWheres [lWhere, rWhere]
   }
-formatNode o@(Object name _) nodes = 
+formatNode o@(Object i) nodes = 
   let parent = findParent o nodes in
   let whereExpr = getSimpleWhereExpr parent nodes in
   ObjectExpr {
-    name = name,
-    set = nameOf parent,
+    name = nameOf $ key o,
+    set = nameOf $ key parent,
     wheres = whereExpr
   }
-formatNode (Relation domain codomain tags name _) nodes = 
+formatNode (Relation domain codomain tags i) nodes = 
   let leftParent = findParent domain nodes in
   let rightParent = findParent codomain nodes in
   let leftWhere = toWhereExpr domain leftParent nodes in
@@ -48,23 +48,27 @@ formatNode (Relation domain codomain tags name _) nodes =
   RelExpr {
     left = formatSetBody domain,
     right = formatSetBody codomain,
-    by = name,
+    by = nameOf i,
     tags = tags,
-    forallLeft = ForAll $ nameOf leftParent,
-    forallRight = ForAll $ nameOf rightParent,
+    forallLeft = ForAll $ nameOf $ key leftParent,
+    forallRight = ForAll $ nameOf $ key rightParent,
     wheres = mergeWheres [leftWhere, rightWhere]
   }
   where
     toWhereExpr node parent nodes = 
-      if parent == universal then BlankWhere else Clause [formatNode parent nodes]
+      if parent == anyObject then BlankWhere else Clause [formatNode parent nodes]
+
+getName :: Identifier -> String
+getName (Unique name id) = name
+getName Anonymous = error "Format.getName: how did we get there?"
 
 getSimpleWhereExpr :: Node -> Graph -> WhereExpr
 getSimpleWhereExpr parent nodes = 
-  if parent == universal then BlankWhere else Clause [formatNode parent nodes]
+  if parent == anyObject then BlankWhere else Clause [formatNode parent nodes]
 
 formatSetBody :: Node -> SetBodyExpr 
-formatSetBody (Set (Collection es) tags name _) = SetContaining (fmap nameOf es)
-formatSetBody (Set (FormOf someType) tags name _) = SetTypeOfExpr (nameOf someType)
+formatSetBody (Collection (Multiple es) tags _) = SetContaining (fmap (nameOf . key) es)
+formatSetBody (Collection (FormOf someType) tags _) = SetTypeOfExpr (nameOf $ key someType)
 formatSetBody _ = undefined 
 
 mergeWheres :: [WhereExpr] -> WhereExpr

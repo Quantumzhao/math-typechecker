@@ -41,6 +41,11 @@ addNewStatement stmt = do
   let nodes' = stmt : nodes
   put (nodes', idGen')
 
+addNewStatementM :: PContext Node -> Context
+addNewStatementM stmt = do
+  stmt' <- stmt
+  addNewStatement stmt'
+
 move2NextId :: Context
 move2NextId = modify (\(ns, id) -> (ns, id + 1))
 

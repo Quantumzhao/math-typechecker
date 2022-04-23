@@ -58,8 +58,6 @@ data Node
     tags :: [String], 
     key :: Identifier
   }
-  -- template
-  | AnyObject
   deriving (Eq, Show)
 
 data UpperStructure

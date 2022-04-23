@@ -6,14 +6,11 @@ import Set
 import Control.Monad.State.Lazy
 import Tags
 
--- relationLit :: String
--- relationLit = "Relation"
-
--- relTags :: [String] -> [String]
--- relTags tags = "Relation" : tags
-
--- genRelation :: Node -> Node -> [String] -> Node
--- genRelation relFrom relTo tags = Relation relFrom relTo (relTags tags)
+genRelation :: Node -> Node -> [String] -> String -> PContext Node
+genRelation relFrom relTo tags name = do
+  id <- getNewId 
+  let rel = Relation relFrom relTo tags (Unique name id)
+  return rel
 
 -- applyR (Relation dom cod tags name _) b = do
 --   nodes <- getNodes
@@ -32,3 +29,36 @@ import Tags
 
 elems :: [String] -> [String] -> Bool
 elems tags list = all (`elem` list) tags
+
+subsetFnDef :: Node
+subsetFnDef = Relation anySet anySet [setLit] (Unique "subset" "subset")
+
+subset :: Node -> String -> PContext Node
+subset a@(Collection def tags _) name = do
+  (nodes, idGen) <- get
+  newId <- getNewId 
+  let newNode = Collection def tags (Unique name newId)
+  subsetRel <- newNode `isSubsetOf` a
+  addNewStatement subsetRel
+  return newNode
+subset _ _ = error "Set.subset: not a set"
+
+isSubsetOfB :: Node -> Node -> PContext Bool
+isSubsetOfB a b = do
+  graph <- getNodes
+  case findFirst (a `isSubsetOf'` b) graph of
+    Just _ -> return True
+    Nothing -> return False
+  where
+    isSubsetOf' a b (Relation from to _ (Unique "subset" _)) = a == from && b == to
+    isSubsetOf' a b _ = False
+
+isInB :: Node -> Node -> PContext Bool
+isInB e set = do
+  nodes <- getNodes 
+  case findFirst (e `isIn'` set) nodes of
+    Just _ -> return True
+    Nothing -> return False
+  where 
+    isIn' a b (Relation from to _ (Unique "isIn" _)) = a == from && b == to
+    isIn' _ _ _ = False
