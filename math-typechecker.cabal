@@ -25,10 +25,7 @@ source-repository head
 
 library
   exposed-modules:
-      BinaryOperation
-      Common
       ContextState
-      Group
       Interpreter.AST
       Interpreter.Evaluate
       Interpreter.Parser
@@ -40,9 +37,7 @@ library
       Printer.Print2String
       Relation
       Set
-      Statement
       Tags
-      Unit
   other-modules:
       Paths_math_typechecker
   hs-source-dirs:
