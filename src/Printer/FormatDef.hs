@@ -20,7 +20,7 @@ data Expr
   | RelExpr {
     left :: SetBodyExpr, 
     right :: SetBodyExpr,
-    by :: String, 
+    name :: String, 
     tags :: [String],
     forallLeft :: QualifierExpr,
     forallRight :: QualifierExpr,

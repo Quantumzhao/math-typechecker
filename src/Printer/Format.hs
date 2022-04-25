@@ -48,7 +48,7 @@ formatNode (Relation domain codomain tags i) nodes =
   RelExpr {
     left = formatSetBody domain,
     right = formatSetBody codomain,
-    by = nameOf i,
+    name = nameOf i,
     tags = tags,
     forallLeft = ForAll $ nameOf $ key leftParent,
     forallRight = ForAll $ nameOf $ key rightParent,
@@ -69,10 +69,11 @@ getSimpleWhereExpr parent nodes =
 formatSetBody :: Node -> SetBodyExpr 
 formatSetBody (Collection (Multiple es) tags _) = SetContaining (fmap (nameOf . key) es)
 formatSetBody (Collection (FormOf someType) tags _) = SetTypeOfExpr (nameOf $ key someType)
-formatSetBody _ = undefined 
+formatSetBody _ = error "formatSetBody: not a set" 
 
 mergeWheres :: [WhereExpr] -> WhereExpr
-mergeWheres = undefined 
+mergeWheres [] = BlankWhere 
+mergeWheres (x : xs) = undefined 
 
 -- "parent" is referring to the set which is the greatest lower bound of a lattice
 -- formed by the subset relation and all sets that contains this element

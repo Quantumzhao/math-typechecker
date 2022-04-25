@@ -75,7 +75,7 @@ Error: D is not defined
 
 > exit
 
-> Ar := A ~ where ~ is proper
+> Ar(X) := A ~ X by ArB, ~ is proper
 Ar is a 
 
 > pSet := A -> B where 

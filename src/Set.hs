@@ -2,14 +2,13 @@
 
 module Set where
 
-import Prelude
-import Common
+import Prelude as P
 import GHC.Natural
 import Control.Monad.State.Lazy
 import qualified Data.List as List
 import Data.List (intersperse, intercalate)
 import ContextState
-import Node
+import Node as N
 import Data.Map
 import Tags
 
@@ -20,13 +19,13 @@ setLit = "Set"
 
 isSet :: Node -> Bool
 isSet (Collection _ tags _) = setLit `elem` tags
-isSet _ = False
+isSet _ = P.False
 
 anyCollection :: Node
-anyCollection = Collection (FormOf anyObject) [] (Unique "AnyCollection" "AnyCollection")
+anyCollection = Collection (FormOf N.True) [] (Unique "AnyCollection" "AnyCollection")
 
 anySet :: Node
-anySet = Collection (FormOf anyObject) [setLit] (Unique "AnySet" "AnySet")
+anySet = Collection (FormOf N.True) [setLit] (Unique "AnySet" "AnySet")
 
 {-| returns a statement actually -}
 isSubsetOf :: Node -> Node -> PContext Node
@@ -42,16 +41,18 @@ isIn x set = do
   let isInRel = Relation x set [] (Unique "isIn" id) 
   return isInRel
 
-getElement :: Node -> PContext Node
-getElement set@(Collection def tags i) = do
+getElement :: Node -> String -> PContext Node
+getElement set@(Collection def tags i) name = do
   newId <- getNewId 
   let e = case def of
         Multiple (x : xs) -> x
-        FormOf node -> node
+        FormOf node -> do
+          let obj = Object (Unique name newId)
+          addNewStatementM (PContext Node)
         _ -> error "Set.getElement: empty set"
   addNewStatementM (e `isIn` set)
   return e
-getElement _ = error "Set.getElement: not a set"
+getElement _ _ = error "Set.getElement: not a set"
 
 empty :: Node
 empty = Collection (Multiple []) [setLit] (Unique "Empty" "Empty")

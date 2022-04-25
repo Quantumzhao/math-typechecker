@@ -31,7 +31,7 @@ elems :: [String] -> [String] -> Bool
 elems tags list = all (`elem` list) tags
 
 subsetFnDef :: Node
-subsetFnDef = Relation anySet anySet [setLit] (Unique "subset" "subset")
+subsetFnDef = Relation anySet anySet orderedRel (Unique "subset" "subset")
 
 subset :: Node -> String -> PContext Node
 subset a@(Collection def tags _) name = do

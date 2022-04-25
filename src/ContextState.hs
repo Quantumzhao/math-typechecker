@@ -1,7 +1,6 @@
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE FlexibleContexts #-}
 module ContextState where
-import Common
 import Data.Map
 import Control.Monad.State.Lazy (State, get, put)
 import Control.Monad.Except

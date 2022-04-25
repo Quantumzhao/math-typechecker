@@ -13,30 +13,32 @@ data DefEntry = DefEntry {
 }
 
 data MathDef
-  = ToSet NaiveSetDef
+  = ToCollection Collection
   | ToOther OtherStructureDef
 
-data NaiveSetDef 
-  = SetDef {
+data Collection 
+  = CollectionDef {
     name :: String,
-    setTags :: [String],
+    collectionTags :: [String],
     body :: SetBodyDef
   }
-  | SetVariable String
+  | CVariableRep'n String
 
 data OtherStructureDef
   = MappingDef {
-    domain :: NaiveSetDef,
-    range :: NaiveSetDef,
+    domain :: Collection,
+    range :: Collection,
     tags :: [String]
   }
   | RelDef {
-    from :: NaiveSetDef,
-    to :: NaiveSetDef,
+    nameO :: String,
+    from :: Collection,
+    to :: Collection,
     tags :: [String]
   }
   | ObjectDef {
-    set :: NaiveSetDef
+    nameO :: String,
+    set :: Collection
   }
   | OtherVariable String
 
@@ -45,7 +47,7 @@ data Closure
   | BlankClosure
 
 data SetBodyDef
-  = SetTypeDef
-  | SetContainingDef
+  = SetTypeDef Collection
+  | SetContainingDef [MathDef]
 
 -- data 

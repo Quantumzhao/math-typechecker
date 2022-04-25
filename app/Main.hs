@@ -4,6 +4,8 @@ import ContextState
 import Interpreter.Evaluate
 import Interpreter.Parser
 import Printer.Print2String
+import Printer.Format (formatNode)
+import Node
 
 main :: IO ()
 main =  repl ([], 0)
@@ -16,8 +18,8 @@ repl env = do
     Err errMsg -> do 
       putStrLn errMsg
       repl env
-    Res output -> do
-      printLns (printExpr output)
+    Res n -> do
+      printLns $ printExpr $ formatNode n (fst env')
       repl env'
     Halt -> return ()
 
