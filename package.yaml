@@ -25,7 +25,7 @@ dependencies:
 - uuid >= 0.1
 - MonadRandom >= 0.1
 - mtl >= 0.1
-- utility-ht >= 0.1
+- utility-ht >= 0.0
 
 library:
   source-dirs: src
