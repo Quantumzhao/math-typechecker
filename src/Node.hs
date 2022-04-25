@@ -78,11 +78,11 @@ data Identifier
 
 instance Eq Identifier where
   (==) (Unique n i) (Unique n' i') = n == n' && i == i'
-  (==) _ _ = False
+  (==) _ _ = Prelude.False
 
 data ElementTemplate 
   -- create from a defined set of elements
   = Multiple [Node]
-  -- for all ... in ..., be in this form
-  | FormOf Node
+  -- the nodes should all be relations
+  | FormOf [Node -> Node]
   deriving (Eq, Show)
