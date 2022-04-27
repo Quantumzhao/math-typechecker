@@ -9,32 +9,32 @@ import qualified Data.List as List
 import Data.List (intersperse, intercalate)
 import ContextState
 import Node as N
-import Data.Map
 import Tags
 
-anyObject = Object (Unique "Anything" "Anything")
+empty :: Node
+empty = Class [setLit] (Unique "Empty" "Empty")
+
+allSets :: Node
+allSets = Class [] (Unique "AllSets" "AllSets")
 
 setLit :: String
 setLit = "Set"
 
 isSet :: Node -> Bool
-isSet (Collection _ tags _) = setLit `elem` tags
+isSet (Class tags _) = setLit `elem` tags
 isSet _ = P.False
 
-anyCollection :: Node
-anyCollection = Collection (FormOf N.True) [] (Unique "AnyCollection" "AnyCollection")
+anyClass :: Node
+anyClass = Class [] (Unique "AnyClass" "AnyClass")
 
-anySet :: Node
-anySet = Collection (FormOf N.True) [setLit] (Unique "AnySet" "AnySet")
-
-{-| returns a statement actually -}
+{-| returns a relation actually -}
 isSubsetOf :: Node -> Node -> PContext Node
 isSubsetOf a b = do
   id <- getNewId
   let subsetRel = Relation a b orderedRel (Unique "subset" id)
   return subsetRel
 
-{-| returns a statement actually -}
+{-| returns a relation actually -}
 isIn :: Node -> Node -> PContext Node
 isIn x set = do
   id <- getNewId 
@@ -42,20 +42,14 @@ isIn x set = do
   return isInRel
 
 getElement :: Node -> String -> PContext Node
-getElement set@(Collection def tags i) name = do
+getElement set@(Class tags i) name = do
   newId <- getNewId 
-  let e = case def of
-        Multiple (x : xs) -> x
-        FormOf node -> do
-          let obj = Object (Unique name newId)
-          addNewStatementM (PContext Node)
-        _ -> error "Set.getElement: empty set"
-  addNewStatementM (e `isIn` set)
-  return e
+  if set == empty then error "Set.getElement: empty set"
+  else do
+    let e = Object set (Unique name newId)
+    addNewStatementM (e `isIn` set)
+    return e
 getElement _ _ = error "Set.getElement: not a set"
-
-empty :: Node
-empty = Collection (Multiple []) [setLit] (Unique "Empty" "Empty")
 
 -- powersetFnDef :: Node
 -- powersetFnDef = 
@@ -99,8 +93,8 @@ empty = Collection (Multiple []) [setLit] (Unique "Empty" "Empty")
 --   else error "apply fixed"
 -- applyR'ed _ _ = error "apply no match" 
 
-getNewSet :: String -> [String] -> ElementTemplate -> PContext Node
-getNewSet name tags setType = do
+getNewSet :: [String] -> String -> PContext Node
+getNewSet tags name = do
   id <- getNewId 
-  let coll = Collection setType (setLit : tags) (Unique name id)
+  let coll = Class (setLit : tags) (Unique name id)
   return coll

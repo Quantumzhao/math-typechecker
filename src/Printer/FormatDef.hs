@@ -7,23 +7,21 @@ data Expr
   = SetExpr {
     name :: String,
     tags :: [String],
-    body :: SetBodyExpr,
+    body :: String,
     wheres :: WhereExpr
   }
   | MappingExpr {
     name :: String,
     tags :: [String],
-    left :: SetBodyExpr,
-    right :: SetBodyExpr,
+    left :: String,
+    right :: String,
     wheres :: WhereExpr
   }
   | RelExpr {
-    left :: SetBodyExpr, 
-    right :: SetBodyExpr,
+    left :: String, 
+    right :: String,
     name :: String, 
     tags :: [String],
-    forallLeft :: QualifierExpr,
-    forallRight :: QualifierExpr,
     wheres :: WhereExpr
   }
   | ObjectExpr {
@@ -42,10 +40,6 @@ data QualifierExpr
   = BlankQualifier
   | ForAll String
   | Exist String String
-
-data SetBodyExpr
-  = SetTypeOfExpr String
-  | SetContaining [String]
 
 data WhereExpr 
   = Clause [Expr]

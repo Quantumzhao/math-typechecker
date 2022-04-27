@@ -39,8 +39,8 @@ data Node
     tags :: [String], 
     key :: Identifier
   }
-  | Collection {
-    defOf :: ElementTemplate,
+  | Class {
+    -- defOf :: ElementTemplate,
     tags :: [String], 
     key :: Identifier
   }
@@ -50,6 +50,7 @@ data Node
   }
   -- the most generic type of objects, can be any type
   | Object {
+    typeOf :: Node,
     key :: Identifier
   } 
   | Relation {
@@ -83,6 +84,5 @@ instance Eq Identifier where
 data ElementTemplate 
   -- create from a defined set of elements
   = Multiple [Node]
-  -- the nodes should all be relations
-  | FormOf [Node -> Node]
+  | FormOf Node
   deriving (Eq, Show)

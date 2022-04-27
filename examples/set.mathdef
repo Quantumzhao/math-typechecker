@@ -28,11 +28,14 @@ f is Set PB -> Set B where
     B is Set B
 
 > AB := A intersect B
-AB is finite Set AB
+AB is finite Set AB where 
+    AB is related to B by subset
+    AB is related to A by subset
 
 > moreinfo AB
 AB is finite set AB where
-    AB is A intersect B
+    AB is related to B by subset
+    AB is related to A by subset
 
 > g := A -> B
 g is finite Set A -> Set B
@@ -53,7 +56,7 @@ Set typeof (a, b) where
     b is in B
 
 > ArB := A ~ B
-A isrelatedto B by ArB for all in A, for all in B
+A isrelatedto B by ArB
 
 > A isrelatedto B
 Invalid Input

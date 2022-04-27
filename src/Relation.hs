@@ -27,17 +27,14 @@ genRelation relFrom relTo tags name = do
 -- applyL (Relation dom cod tags name _) a = do
 -- applyL _ a = error "Relation.applyL: not a relation"
 
-elems :: [String] -> [String] -> Bool
-elems tags list = all (`elem` list) tags
-
 subsetFnDef :: Node
-subsetFnDef = Relation anySet anySet orderedRel (Unique "subset" "subset")
+subsetFnDef = Relation allSets allSets orderedRel (Unique "subset" "subset")
 
 subset :: Node -> String -> PContext Node
-subset a@(Collection def tags _) name = do
+subset a@(Class tags _) name = do
   (nodes, idGen) <- get
   newId <- getNewId 
-  let newNode = Collection def tags (Unique name newId)
+  let newNode = Class tags (Unique name newId)
   subsetRel <- newNode `isSubsetOf` a
   addNewStatement subsetRel
   return newNode

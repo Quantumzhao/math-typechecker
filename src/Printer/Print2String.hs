@@ -10,18 +10,17 @@ import Data.List (intercalate)
 printExpr :: Expr -> [String]
 printExpr (SetExpr name tags body wheres) = 
   if name == "Universal" || name == "Empty" then [name]
-  else (name ++ " is " ++ intercalate ", " tags ++ " Set " ++ name ++ printSetBodyExpr body) 
+  else (name ++ " is " ++ intercalate ", " tags ++ " Set " ++ name ++ body) 
   `combineWith` wheres
 
 printExpr (MappingExpr name tags left right wheres) =
-  let main = name ++ " is " ++ printSetBodyExpr left ++ " -> " ++ printSetBodyExpr right ++
+  let main = name ++ " is " ++ left ++ " -> " ++ right ++
              ", -> is " ++ intercalate ", " tags ++ ", " 
   in main `combineWith` wheres
 
-printExpr (RelExpr left right by tags forallLeft forallRight wheres) =
-  let main = printSetBodyExpr left ++ " is related to " ++ printSetBodyExpr right ++ 
-             " by " ++ by ++ intercalate ", " tags ++ 
-             printQualifierExpr forallLeft ++ printQualifierExpr forallRight
+printExpr (RelExpr left right by tags wheres) =
+  let main = left ++ " is related to " ++ right ++ 
+             " by " ++ by ++ intercalate ", " tags
   in main `combineWith` wheres
 
 printExpr (ObjectExpr name set wheres) = (name ++ " is element in " ++ set) `combineWith` wheres
@@ -39,10 +38,6 @@ printQualifierExpr :: QualifierExpr -> String
 printQualifierExpr BlankQualifier = ""
 printQualifierExpr (ForAll set) = ", for all in " ++ set
 printQualifierExpr (Exist symbol set) = symbol ++ " is in " ++ set
-
-printSetBodyExpr :: SetBodyExpr -> String
-printSetBodyExpr (SetTypeOfExpr setType) = "type of " ++ setType
-printSetBodyExpr (SetContaining es) = "consisting of " ++ intercalate ", " es
 
 combineWith :: String -> WhereExpr -> [String]
 combineWith main wheres =

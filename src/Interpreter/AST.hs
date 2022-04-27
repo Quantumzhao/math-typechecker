@@ -13,32 +13,31 @@ data DefEntry = DefEntry {
 }
 
 data MathDef
-  = ToCollection Collection
+  = ToClass Class
   | ToOther OtherStructureDef
 
-data Collection 
-  = CollectionDef {
+data Class 
+  = ClassDef {
     name :: String,
-    collectionTags :: [String],
-    body :: SetBodyDef
+    classTags :: [String]
   }
   | CVariableRep'n String
 
 data OtherStructureDef
   = MappingDef {
-    domain :: Collection,
-    range :: Collection,
+    domain :: Class,
+    range :: Class,
     tags :: [String]
   }
   | RelDef {
     nameO :: String,
-    from :: Collection,
-    to :: Collection,
+    from :: Class,
+    to :: Class,
     tags :: [String]
   }
   | ObjectDef {
     nameO :: String,
-    set :: Collection
+    set :: Class
   }
   | OtherVariable String
 
@@ -47,7 +46,6 @@ data Closure
   | BlankClosure
 
 data SetBodyDef
-  = SetTypeDef Collection
-  | SetContainingDef [MathDef]
+  = SetTypeDef Class
 
 -- data 
