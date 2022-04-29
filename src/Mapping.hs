@@ -55,8 +55,8 @@ unionFnDef = Mapping (allSets <.> allSets) allSets [] (Unique "union" "union")
 relComplFnDef :: Node
 relComplFnDef = Mapping (allSets <.> allSets) allSets [] (Unique "minus" "minus")
 
-complement :: Node -> Node -> String -> PContext Node
-complement a b name
+relcompl :: Node -> Node -> String -> PContext Node
+relcompl a b name
   | isSet a && isSet b = do
     id <- getNewId 
     let application = relComplFnDef

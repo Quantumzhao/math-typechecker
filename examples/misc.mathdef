@@ -1,13 +1,20 @@
-> G := Group Z4 +
-G: abelian Group a + where 
-	a: [n]_(mod 4) where
-		n in [0, 3]
+intersect := A' * B' -> C' where
+	A' := Class typeof Set A
+	B' := Class typeof Set B
+	C' := Class typeof Set C
+	C' ~ A' by subset
+	C' ~ B' by subset
 
-> f := V -> G where -> is bijective
-> f: V -> abelian Group a + where 
-	a: [n]_(mod 4) where
-		n in [0, 3]
-    -> is bijective
+isIn := A ~ A' where
+	A := Set A
+	A' := Class A' typeof Set A
 
-> f^(-1)(G)
-V
+a := element of A
+
+f := A -> B
+
+f(a)
+-----------------------------
+f(a) = b where
+	b isIn B
+
