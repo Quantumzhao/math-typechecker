@@ -59,3 +59,12 @@ isInB e set = do
   where 
     isIn' a b (Relation from to _ (Unique "isIn" _)) = a == from && b == to
     isIn' _ _ _ = False
+
+existRelation :: Node -> Graph -> Bool
+existRelation (Relation a b tags (Unique name id)) nodes = 
+  let f (Relation a' b' tags' (Unique name' id')) = undefined 
+      f _ = False
+  in case findFirst f nodes of
+    Just _ -> True
+    Nothing -> False
+existRelation _ _ = error "existRelation: not a relation"

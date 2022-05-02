@@ -16,75 +16,81 @@ evaluate :: Command -> PContext ReturnType
 evaluate com =
   case com of
     Definition def -> do
-      nodes <- getNodes
-      res <- evalDefinition def
+      res <- evalDefinition def True
       return $ Res res
     Info symbol -> evalInfo symbol
     Exit -> return Halt
-    AnonymousExpr expr -> evalAnonymousExpr expr
+    AnonymousExpr lit expr -> do
+      res <- evalAnonymousExpr expr
+      return $ Res res
 
 evalWithEnv ::  GraphI -> Command -> (ReturnType, GraphI)
 evalWithEnv env com = runState (evaluate com) env
 
 evalInfo symbol = undefined
 
-evalAnonymousExpr expr = undefined
+evalAnonymousExpr :: MathExp -> PContext Node
+evalAnonymousExpr (Apply1 (Symbol name) exp1) = undefined
+evalAnonymousExpr (Apply2 (Symbol name) exp1 exp2) = undefined
+evalAnonymousExpr (Relate (Symbol name) exp1 exp2) = undefined
+evalAnonymousExpr (Tuple exp1 exp2) = do
+  let left = evalAnonymousExpr exp1
+  let right = evalAnonymousExpr exp2
+  undefined
+evalAnonymousExpr (Variable (Symbol name)) = findByNameM' name
 
-evalDefinition :: DefEntry -> PContext Node
-evalDefinition (DefEntry name body closure) = do
+evalDefinition :: DefEntry -> Bool -> PContext Node
+evalDefinition (DefEntry name body closure) isTemplate = do
   evalClosure closure
-  node' <- evalMathDef name body
+  id <- getNewId
+  let i = if isTemplate then Arbitrary else Unique name id
+  node' <- evalMathDef name body i
   addNewNode node'
-
-evalClass :: String -> Class -> PContext Node
-evalClass name classDef = undefined
 
 -- convert the definition to a node
 -- then return it
-evalMathDef :: String -> MathDef -> PContext Node
-evalMathDef name (FromClassAST c) = undefined
-evalMathDef name (FromMappingAST (MappingDef (Symbol domain) (Symbol range) tags)) = do
-  id <- getNewId
+evalMathDef :: String -> MathDef -> Identifier -> PContext Node
+evalMathDef name (FromClassAST (ClassDef tags)) key = do
+  let res = Class tags key
+  return res
+evalMathDef name (FromMappingAST (MappingDef (Symbol domain) (Symbol range) tags)) key = do
   d' <- findByNameM' domain
   r' <- findByNameM' range
   let res = Mapping {
     domain = d',
     range = r',
     tags = tags,
-    key = Unique name id
+    key = key
   }
   return res
-evalMathDef name (FromRelationAST (RelDef (Symbol from) (Symbol to) tags)) = do
-  id <- getNewId
+evalMathDef name (FromRelationAST (RelDef (Symbol from) (Symbol to) tags)) key = do
   from' <- findByNameM' from
   to' <- findByNameM' to
   let res = Relation {
     domain = from',
     codomain = to',
     tags = tags,
-    key = Unique name id
+    key = key
   }
   return res
-evalMathDef name (FromObjectAST (ObjectDef (Symbol set))) = do
-  id <- getNewId
+evalMathDef name (FromObjectAST (ObjectDef (Symbol set))) key = do
   set' <- findByNameM' set
-  let res = Object set' (Unique name id)
+  let res = Object set' key
   return res
-evalMathDef name (FromTupleAST (TupleDef (Symbol left) (Symbol right) tags)) = do
-  id <- getNewId
+evalMathDef name (FromTupleAST (TupleDef (Symbol left) (Symbol right) tags)) key = do
   left' <- findByNameM' left
   right' <- findByNameM' right
-  let res = DirectProduct (left', right') (Unique name id)
+  let res = DirectProduct (left', right') key
   return res
-evalMathDef name (FromSymbol s) = do
+evalMathDef name (FromSymbol s) key = do
   n <- findByNameM' name
-  Alias n . Unique name <$> getNewId
+  return $ Alias n key
 
 -- add closure to the environment
 -- and then return the closure
 evalClosure :: Closure -> PContext [Node]
-evalClosure (d : ds) = do
-  n <- evalDefinition d
+evalClosure ((isTemplate, d) : ds) = do
+  n <- evalDefinition d isTemplate
   addNewNode n
   ns <- evalClosure ds
   return (n : ns)
@@ -97,8 +103,8 @@ findByNameM' name = do
     Nothing -> error "findByNameM': node not defined"
     Just n -> return n
 
-findInClosure :: String -> Closure -> Maybe DefEntry
-findInClosure name (x@(DefEntry sym _ _) : xs)
-  | sym == name = Just x
-  | otherwise = findInClosure name xs
-findInClosure name [] = Nothing
+-- findInClosure :: String -> Closure -> Maybe DefEntry
+-- findInClosure name (x@(DefEntry sym _ _) : xs)
+--   | sym == name = Just x
+--   | otherwise = findInClosure name xs
+-- findInClosure name [] = Nothing
