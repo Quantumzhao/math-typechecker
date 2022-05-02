@@ -1,51 +1,67 @@
 module Interpreter.AST where
 
+-- a single command that users can input
 data Command
+  -- defining a structure
   = Definition DefEntry
+  -- what's that?
   | AnonymousExpr String
+  -- show more information on a structure, 
+  -- needs to be reworked later
   | Info String
+  -- meet its inevitable demise
   | Exit
 
+-- a single entry of the definition of a structure
+-- in the form ? := ?
+-- or ? ~ ?
+-- or whatever
 data DefEntry = DefEntry {
+  -- the name of the variable
   symbol :: String,
+  -- actual definition
   defBody :: MathDef, 
+  -- everything in the wheres clause
   wheres :: Closure
 }
 
 data MathDef
-  = ToClass Class
-  | ToOther OtherStructureDef
+  = FromClassAST Class
+  | FromMappingAST Mapping
+  | FromRelationAST Relation
+  | FromObjectAST Object
+  | FromTupleAST Tuple
+  | FromSymbol Symbol
 
-data Class 
-  = ClassDef {
-    name :: String,
-    classTags :: [String]
-  }
-  | CVariableRep'n String
+data Class = ClassDef {
+  nameC :: String,
+  tagsC :: [String]
+}
 
-data OtherStructureDef
-  = MappingDef {
-    domain :: Class,
-    range :: Class,
-    tags :: [String]
-  }
-  | RelDef {
-    nameO :: String,
-    from :: Class,
-    to :: Class,
-    tags :: [String]
-  }
-  | ObjectDef {
-    nameO :: String,
-    set :: Class
-  }
-  | OtherVariable String
+data Mapping = MappingDef {
+  domainM :: Symbol,
+  rangeM :: Symbol,
+  tagsM :: [String]
+}
 
-data Closure
-  = Clause [DefEntry]
-  | BlankClosure
+data Relation = RelDef {
+  fromR :: Symbol,
+  toR :: Symbol,
+  tagsR :: [String]
+}
 
-data SetBodyDef
-  = SetTypeDef Class
+data Object = ObjectDef {
+  setO :: Symbol
+}
 
--- data 
+data Tuple = TupleDef {
+  leftT :: Symbol,
+  rightT :: Symbol,
+  tags :: [String]
+}
+
+data Symbol = Symbol {
+  referFrom :: String
+}
+
+type Closure = [DefEntry] 

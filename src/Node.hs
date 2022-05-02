@@ -1,37 +1,5 @@
 module Node where
 
--- data Node
---   = Element
---   | Set {
---     tags :: [String]
---   }
---   | Group {
---     tags :: [String]
---   }
---   | Map {
---     tags :: [String]
---   }
---   | Relation {
---     Node :: StructuralRelation,
---     tags :: [String]
---   }
---   | BinOp {
---     operation :: BinaryOperationType,
---     tags :: [String]
---   }
---   | Statement {
---     dependencies :: [Node]
---   }
-
--- data BinaryOperationType
---   = Intersect
---   | Union
---   | Cross
---   | RelCompl
-
--- data StructuralRelation
---   = Subset
-
 data Node
   = Mapping {
     domain :: Node, 
@@ -59,6 +27,10 @@ data Node
     tags :: [String], 
     key :: Identifier
   }
+  | Alias {
+    referFrom :: Node,
+    key :: Identifier
+  }
   deriving (Eq, Show)
 
 data UpperStructure
@@ -74,7 +46,7 @@ data Identifier
     nameOf :: String,
     id :: String
   }
-  | Anonymous
+  | Arbitrary
   deriving (Show)
 
 instance Eq Identifier where

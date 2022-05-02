@@ -26,7 +26,7 @@ addNewNode node = do
   return node
   where nextName name map
           | not $ member name map = return name
-          | otherwise = do 
+          | otherwise = do
               (_, id) <- get
               move2NextId
               nextName (name ++ show id) map
@@ -49,10 +49,16 @@ move2NextId :: Context
 move2NextId = modify (\(ns, id) -> (ns, id + 1))
 
 findFirst :: (Node -> Bool) -> Graph -> Maybe Node
-findFirst f (x : xs) = 
+findFirst f (x : xs) =
   if f x then Just x
   else findFirst f xs
 findFirst f [] = Nothing
+
+findByName :: String -> Graph -> Maybe Node
+findByName name = findFirst (\ n -> nameOf (key n) == name)
+
+findByNameM :: String -> PContext (Maybe Node)
+findByNameM name = findFirst (\ n -> nameOf (key n) == name) <$> getNodes
 
 getNodes :: PContext [Node]
 getNodes = do

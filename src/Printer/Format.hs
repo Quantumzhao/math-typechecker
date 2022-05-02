@@ -52,7 +52,7 @@ formatNode (Relation domain codomain tags i) nodes =
 
 getName :: Identifier -> String
 getName (Unique name id) = name
-getName Anonymous = error "Format.getName: how did we get there?"
+getName Arbitrary = error "Format.getName: how did we get there?"
 
 mergeWheres :: [WhereExpr] -> WhereExpr
 mergeWheres [] = BlankWhere 

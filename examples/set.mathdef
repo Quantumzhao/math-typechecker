@@ -11,12 +11,12 @@ C is Natural
 
 > PB := powerSet B
 PB is Set type of s where
-    forall s in PB, s isSubsetOf B
+    s isSubsetOf B
 
 > moreinfo PB
 PB is Set typeof s where
-    forall s in PB, s is subset of B where
-        exist B in Universal, B is Set B
+    s is subset of B where
+        B is Set B
 
 > f := PB -> B
 f is Set PB -> Set B
@@ -24,7 +24,7 @@ f is Set PB -> Set B
 > moreinfo f
 f is Set PB -> Set B where
     PB is Set type of s where
-        forall s in PB, s is subset of B 
+        s is subset of B 
     B is Set B
 
 > AB := A intersect B
