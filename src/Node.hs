@@ -28,7 +28,7 @@ data Node
     key :: Identifier
   }
   | Alias {
-    referFrom :: Node,
+    reference :: Node,
     key :: Identifier
   }
   deriving (Eq, Show)

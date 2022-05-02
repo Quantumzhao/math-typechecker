@@ -1,3 +1,6 @@
+{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
+{-# HLINT ignore "Use newtype instead of data" #-}
+
 module Interpreter.AST where
 
 -- a single command that users can input
@@ -59,7 +62,7 @@ data Tuple = TupleDef {
 }
 
 data Symbol = Symbol {
-  referFrom :: String
+  reference :: String
 }
 
 type Closure = [(Bool, DefEntry)]

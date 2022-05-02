@@ -8,9 +8,9 @@ import Printer.Format
 import Set
 
 data ReturnType
-    = Res Node
-    | Err String
-    | Halt
+  = Res Node
+  | Err String
+  | Halt
 
 evaluate :: Command -> PContext ReturnType
 evaluate com =
@@ -30,13 +30,21 @@ evalWithEnv env com = runState (evaluate com) env
 evalInfo symbol = undefined
 
 evalAnonymousExpr :: MathExp -> PContext Node
-evalAnonymousExpr (Apply1 (Symbol name) exp1) = undefined
+evalAnonymousExpr (Apply1 (Symbol name) exp1) = do
+  arg <- evalAnonymousExpr exp1
+  f' <- findByNameM' name
+  let f = case f' of
+        Mapping {} -> f'
+        _ -> error "evalAnonymousExpr Aply1: f is not a function"
+  let argParent = undefined
+  undefined
 evalAnonymousExpr (Apply2 (Symbol name) exp1 exp2) = undefined
 evalAnonymousExpr (Relate (Symbol name) exp1 exp2) = undefined
 evalAnonymousExpr (Tuple exp1 exp2) = do
-  let left = evalAnonymousExpr exp1
-  let right = evalAnonymousExpr exp2
-  undefined
+  left <- evalAnonymousExpr exp1
+  right <- evalAnonymousExpr exp2
+  let res = DirectProduct (left, right) Arbitrary
+  return res
 evalAnonymousExpr (Variable (Symbol name)) = findByNameM' name
 
 evalDefinition :: DefEntry -> Bool -> PContext Node

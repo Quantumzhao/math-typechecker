@@ -60,9 +60,23 @@ isInB e set = do
     isIn' a b (Relation from to _ (Unique "isIn" _)) = a == from && b == to
     isIn' _ _ _ = False
 
+get'isIn'relation :: Graph -> Node
+get'isIn'relation nodes = 
+  case findByName "isIn" nodes of
+    Just n -> n
+    Nothing -> error "get'isIn'relation: isIn hasn't been defined yet"
+
+get'subsetOf'relation :: Graph -> Node
+get'subsetOf'relation nodes =
+  case findByName "subset" nodes of
+    Just n -> n
+    Nothing -> error "get'subsetOf'relation: subsetOf hasn't been defined yet"
+
 existRelation :: Node -> Graph -> Bool
 existRelation (Relation a b tags (Unique name id)) nodes = 
-  let f (Relation a' b' tags' (Unique name' id')) = undefined 
+  let f (Relation a' b' tags' (Unique name' id')) = a == a' &&
+                                                    b == b' &&
+                                                    name == name'
       f _ = False
   in case findFirst f nodes of
     Just _ -> True

@@ -1,0 +1,28 @@
+Empty := Set Empty
+
+isIn := A ~ B' by isIn where
+    A := Set A
+    B' := AnySet
+
+isSubsetOf := A ~ B where
+    A := AnySet
+    B := AnySet
+
+intersect := A' * B' -> C' where
+    A' := AnySet typeof A
+    B' := AnySet typeof B
+    C' := AnySet typeof C
+    C isSubsetOf A
+    C isSubsetOf B
+
+union := Set A * Set B -> Set C where
+    A' isSubsetOf C'
+    B' isSubsetOf C'
+    A' isIn A
+    B' isIn B
+    C' isIn C
+
+union(a, b)
+c where 
+    a isSubsetOf c
+    b isSubsetOf c
