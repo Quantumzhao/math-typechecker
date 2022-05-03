@@ -9,7 +9,7 @@ import Tags
 genRelation :: Node -> Node -> [String] -> String -> PContext Node
 genRelation relFrom relTo tags name = do
   id <- getNewId 
-  let rel = Relation relFrom relTo tags (Unique name id)
+  let rel = Relation relFrom relTo tags (Exist name id)
   return rel
 
 -- applyR (Relation dom cod tags name _) b = do
@@ -28,13 +28,13 @@ genRelation relFrom relTo tags name = do
 -- applyL _ a = error "Relation.applyL: not a relation"
 
 subsetFnDef :: Node
-subsetFnDef = Relation allSets allSets orderedRel (Unique "subset" "subset")
+subsetFnDef = Relation allSets allSets orderedRel (Exist "subset" "subset")
 
 subset :: Node -> String -> PContext Node
 subset a@(Class tags _) name = do
   (nodes, idGen) <- get
   newId <- getNewId 
-  let newNode = Class tags (Unique name newId)
+  let newNode = Class tags (Exist name newId)
   subsetRel <- newNode `isSubsetOf` a
   addNewStatement subsetRel
   return newNode
@@ -47,7 +47,7 @@ isSubsetOfB a b = do
     Just _ -> return True
     Nothing -> return False
   where
-    isSubsetOf' a b (Relation from to _ (Unique "subset" _)) = a == from && b == to
+    isSubsetOf' a b (Relation from to _ (Exist "subset" _)) = a == from && b == to
     isSubsetOf' a b _ = False
 
 isInB :: Node -> Node -> PContext Bool
@@ -57,7 +57,7 @@ isInB e set = do
     Just _ -> return True
     Nothing -> return False
   where 
-    isIn' a b (Relation from to _ (Unique "isIn" _)) = a == from && b == to
+    isIn' a b (Relation from to _ (Exist "isIn" _)) = a == from && b == to
     isIn' _ _ _ = False
 
 get'isIn'relation :: Graph -> Node
@@ -73,8 +73,8 @@ get'subsetOf'relation nodes =
     Nothing -> error "get'subsetOf'relation: subsetOf hasn't been defined yet"
 
 existRelation :: Node -> Graph -> Bool
-existRelation (Relation a b tags (Unique name id)) nodes = 
-  let f (Relation a' b' tags' (Unique name' id')) = a == a' &&
+existRelation (Relation a b tags (Exist name id)) nodes = 
+  let f (Relation a' b' tags' (Exist name' id')) = a == a' &&
                                                     b == b' &&
                                                     name == name'
       f _ = False

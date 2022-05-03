@@ -12,10 +12,10 @@ import Node as N
 import Tags
 
 empty :: Node
-empty = Class [setLit] (Unique "Empty" "Empty")
+empty = Class [setLit] (Exist "Empty" "Empty")
 
 allSets :: Node
-allSets = Class [] (Unique "AllSets" "AllSets")
+allSets = Class [] (Exist "AllSets" "AllSets")
 
 setLit :: String
 setLit = "Set"
@@ -25,20 +25,20 @@ isSet (Class tags _) = setLit `elem` tags
 isSet _ = P.False
 
 anyClass :: Node
-anyClass = Class [] (Unique "AnyClass" "AnyClass")
+anyClass = Class [] (Exist "AnyClass" "AnyClass")
 
 {-| returns a relation actually -}
 isSubsetOf :: Node -> Node -> PContext Node
 isSubsetOf a b = do
   id <- getNewId
-  let subsetRel = Relation a b orderedRel (Unique "subset" id)
+  let subsetRel = Relation a b orderedRel (Exist "subset" id)
   return subsetRel
 
 {-| returns a relation actually -}
 isIn :: Node -> Node -> PContext Node
 isIn x set = do
   id <- getNewId 
-  let isInRel = Relation x set [] (Unique "isIn" id) 
+  let isInRel = Relation x set [] (Exist "isIn" id) 
   return isInRel
 
 getElement :: Node -> String -> PContext Node
@@ -46,7 +46,7 @@ getElement set@(Class tags i) name = do
   newId <- getNewId 
   if set == empty then error "Set.getElement: empty set"
   else do
-    let e = Object set (Unique name newId)
+    let e = Object set (Exist name newId)
     addNewStatementM (e `isIn` set)
     return e
 getElement _ _ = error "Set.getElement: not a set"
@@ -96,5 +96,5 @@ getElement _ _ = error "Set.getElement: not a set"
 getNewSet :: [String] -> String -> PContext Node
 getNewSet tags name = do
   id <- getNewId 
-  let coll = Class (setLit : tags) (Unique name id)
+  let coll = Class (setLit : tags) (Exist name id)
   return coll

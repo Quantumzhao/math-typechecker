@@ -49,10 +49,11 @@ formatNode (Relation domain codomain tags i) nodes =
     tags = tags,
     wheres = mergeWheres [leftWhere, rightWhere]
   }
+formatNode (Alias n i) nodes = undefined
 
 getName :: Identifier -> String
-getName (Unique name id) = name
-getName Arbitrary = error "Format.getName: how did we get there?"
+getName (Node.Exist name id) = name
+getName Node.ForAll = error "Format.getName: how did we get there?"
 
 mergeWheres :: [WhereExpr] -> WhereExpr
 mergeWheres [] = BlankWhere 

@@ -33,7 +33,7 @@ import Relation
 (<.>) :: Node -> Node -> PContext Node
 (<.>) n1 n2 = do
   newId <- getNewId
-  let res = DirectProduct (n1, n2) (Unique "cross" newId)
+  let res = DirectProduct (n1, n2) (Exist "cross" newId)
   return res
 
 -- crossFnDef :: Node
@@ -41,7 +41,7 @@ import Relation
 --   domain = allSets <.> allSets,
 --   range = allSets <.> allSets,
 --   tags = [surjectiveTag, injectiveTag],
---   key = Unique "cross" "cross" 
+--   key = Exist "cross" "cross" 
 -- }
 
 -- intersectFnDef ::  Node
@@ -49,21 +49,21 @@ import Relation
 --   domain = allSets <.> allSets,
 --   range = allSets,
 --   tags = [],
---   key = Unique "intersect" "intersect"
+--   key = Exist "intersect" "intersect"
 -- }
 
 -- unionFnDef :: Node
--- unionFnDef = Mapping (allSets <.> allSets) allSets [] (Unique "union" "union")
+-- unionFnDef = Mapping (allSets <.> allSets) allSets [] (Exist "union" "union")
 
 -- relComplFnDef :: Node
--- relComplFnDef = Mapping (allSets <.> allSets) allSets [] (Unique "minus" "minus")
+-- relComplFnDef = Mapping (allSets <.> allSets) allSets [] (Exist "minus" "minus")
 
 -- relcompl :: Node -> Node -> String -> PContext Node
 -- relcompl a b name
 --   | isSet a && isSet b = do
 --     id <- getNewId 
 --     let application = relComplFnDef
---     let newNode = Class (tags a) (Unique name id)
+--     let newNode = Class (tags a) (Exist name id)
 --     addNewStatementM (newNode `isSubsetOf` a)
 --     return newNode
 --   | otherwise = error "complement: not sets"

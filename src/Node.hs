@@ -42,15 +42,15 @@ data UpperStructure
   deriving (Eq, Show)
 
 data Identifier
-  = Unique {
+  = Exist {
     nameOf :: String,
     id :: String
   }
-  | Arbitrary
+  | ForAll
   deriving (Show)
 
 instance Eq Identifier where
-  (==) (Unique n i) (Unique n' i') = n == n' && i == i'
+  (==) (Exist n i) (Exist n' i') = n == n' && i == i'
   (==) _ _ = Prelude.False
 
 data ElementTemplate 

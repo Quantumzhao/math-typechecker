@@ -3,7 +3,7 @@ import ContextState
 import Control.Monad.State.Lazy
 import Printer.FormatDef hiding (Clause, tags)
 import Interpreter.AST hiding (tags)
-import Node hiding (Definition)
+import Node as N hiding (Definition)
 import Printer.Format
 import Set
 
@@ -43,7 +43,7 @@ evalAnonymousExpr (Relate (Symbol name) exp1 exp2) = undefined
 evalAnonymousExpr (Tuple exp1 exp2) = do
   left <- evalAnonymousExpr exp1
   right <- evalAnonymousExpr exp2
-  let res = DirectProduct (left, right) Arbitrary
+  let res = DirectProduct (left, right) N.ForAll
   return res
 evalAnonymousExpr (Variable (Symbol name)) = findByNameM' name
 
@@ -51,7 +51,7 @@ evalDefinition :: DefEntry -> Bool -> PContext Node
 evalDefinition (DefEntry name body closure) isTemplate = do
   evalClosure closure
   id <- getNewId
-  let i = if isTemplate then Arbitrary else Unique name id
+  let i = if isTemplate then N.ForAll else N.Exist name id
   node' <- evalMathDef name body i
   addNewNode node'
 

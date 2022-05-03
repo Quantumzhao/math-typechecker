@@ -97,12 +97,4 @@ Set typeof s where
     b is element in B
 (a, b) is element in A cross B
 
-> a, b, c := element in Universal
-a is element in Universal
-b is element in Universal
-c is element in Universal
-
-> A := {a, b, c}
-A is Set A consisting of a, b, c
-
 > h := A -> B, -> is injective structural

@@ -4,7 +4,7 @@ import Prelude hiding (print)
 import Node
 import Set
 import ContextState
-import Printer.FormatDef
+import Printer.FormatDef as P
 import Data.List (intercalate)
 
 printExpr :: Expr -> [String]
@@ -36,8 +36,8 @@ printWhereExpr BlankWhere = []
 
 printQualifierExpr :: QualifierExpr -> String
 printQualifierExpr BlankQualifier = ""
-printQualifierExpr (ForAll set) = ", for all in " ++ set
-printQualifierExpr (Exist symbol set) = symbol ++ " is in " ++ set
+printQualifierExpr (P.ForAll set) = ", for all in " ++ set
+printQualifierExpr (P.Exist symbol set) = symbol ++ " is in " ++ set
 
 combineWith :: String -> WhereExpr -> [String]
 combineWith main wheres =

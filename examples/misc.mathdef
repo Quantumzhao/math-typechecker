@@ -18,3 +18,11 @@ f(a)
 f(a) = b where
 	b isIn B
 
+> S4
+Group (<>, Fs) where
+	Fs := Set typeof f where
+		f := s' -> s' where
+			-> is bijective
+			s' := Set of 4
+	<> := Fs * Fs -> Fs
+		
