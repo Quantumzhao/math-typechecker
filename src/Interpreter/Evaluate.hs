@@ -1,11 +1,11 @@
 module Interpreter.Evaluate where
 import ContextState
 import Control.Monad.State.Lazy
-import Printer.FormatDef hiding (Clause, tags)
+import Printer.FormatDef hiding (Clause, tags, Exist, ForAll)
 import Interpreter.AST hiding (tags)
-import Node as N hiding (Definition)
+import Node hiding (Definition)
 import Printer.Format
-import Set
+import Relation
 
 data ReturnType
   = Res Node
@@ -21,7 +21,7 @@ evaluate com =
     Info symbol -> evalInfo symbol
     Exit -> return Halt
     AnonymousExpr lit expr -> do
-      res <- evalAnonymousExpr expr
+      res <- evalAnonymousExpr expr lit
       return $ Res res
 
 evalWithEnv ::  GraphI -> Command -> (ReturnType, GraphI)
@@ -29,29 +29,31 @@ evalWithEnv env com = runState (evaluate com) env
 
 evalInfo symbol = undefined
 
-evalAnonymousExpr :: MathExp -> PContext Node
-evalAnonymousExpr (Apply1 (Symbol name) exp1) = do
-  arg <- evalAnonymousExpr exp1
+evalAnonymousExpr :: MathExp -> String -> PContext Node
+evalAnonymousExpr (Apply1 (Symbol name) exp1) lit = do
+  arg <- evalAnonymousExpr exp1 lit
   f' <- findByNameM' name
   let f = case f' of
         Mapping {} -> f'
         _ -> error "evalAnonymousExpr Aply1: f is not a function"
-  let argParent = undefined
-  undefined
-evalAnonymousExpr (Apply2 (Symbol name) exp1 exp2) = undefined
-evalAnonymousExpr (Relate (Symbol name) exp1 exp2) = undefined
-evalAnonymousExpr (Tuple exp1 exp2) = do
-  left <- evalAnonymousExpr exp1
-  right <- evalAnonymousExpr exp2
-  let res = DirectProduct (left, right) N.ForAll
+  isValid <- arg `isInB` domain f
+  if isValid then return (range f) 
+  else error "evalAnonymouExpr Apply1: arg is not in domain"
+evalAnonymousExpr (Apply2 (Symbol name) exp1 exp2) lit = undefined
+evalAnonymousExpr (Relate (Symbol name) exp1 exp2) lit = error "cannot evaluate a relation"
+evalAnonymousExpr (Tuple exp1 exp2) lit = do
+  left <- evalAnonymousExpr exp1 lit
+  right <- evalAnonymousExpr exp2 lit
+  id <- getNewId
+  let res = DirectProduct (left, right) (Exist lit id)
   return res
-evalAnonymousExpr (Variable (Symbol name)) = findByNameM' name
+evalAnonymousExpr (Variable (Symbol name)) lit = findByNameM' name
 
 evalDefinition :: DefEntry -> Bool -> PContext Node
 evalDefinition (DefEntry name body closure) isTemplate = do
   evalClosure closure
   id <- getNewId
-  let i = if isTemplate then N.ForAll else N.Exist name id
+  let i = if isTemplate then ForAll else Exist name id
   node' <- evalMathDef name body i
   addNewNode node'
 
@@ -116,3 +118,12 @@ findByNameM' name = do
 --   | sym == name = Just x
 --   | otherwise = findInClosure name xs
 -- findInClosure name [] = Nothing
+
+applyArg :: Node -> Node -> PContext Node
+applyArg (Mapping domain range tags i) arg = do
+  isSubset <- arg `isSubsetOfB` domain
+  isIn <- arg `isInB` domain
+  if isSubset then return range
+  else if isIn then do undefined
+  else error "applyArg: arg is not related to domain"
+applyArg _ _ = error "applyArg: not a mapping"

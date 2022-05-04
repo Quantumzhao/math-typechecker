@@ -51,7 +51,9 @@ isSubsetOfB a b = do
     isSubsetOf' a b _ = False
 
 isInB :: Node -> Node -> PContext Bool
-isInB e set = do
+isInB e set
+  | isSet e && set == allSets = return True
+  | otherwise = do
   nodes <- getNodes 
   case findFirst (e `isIn'` set) nodes of
     Just _ -> return True

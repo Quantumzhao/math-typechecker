@@ -1,7 +1,6 @@
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE FlexibleContexts #-}
 module ContextState where
-import Data.Map
 import Control.Monad.State.Lazy (State, get, put)
 import Control.Monad.Except
 import Control.Monad.State
@@ -24,12 +23,6 @@ addNewNode node = do
   let nodes' = node : nodes
   put (nodes', idGen)
   return node
-  where nextName name map
-          | not $ member name map = return name
-          | otherwise = do
-              (_, id) <- get
-              move2NextId
-              nextName (name ++ show id) map
 
 {-| only accepts statements -}
 addNewStatement :: Node -> Context
@@ -60,10 +53,15 @@ findByName name = findFirst (\ n -> nameOf (key n) == name)
 findByNameM :: String -> PContext (Maybe Node)
 findByNameM name = findFirst (\ n -> nameOf (key n) == name) <$> getNodes
 
-getNodes :: PContext [Node]
+getNodes :: PContext Graph
 getNodes = do
   (nodes, _) <- get
   return nodes
+
+getRelations :: PContext [Node]
+getRelations = filter match <$> getNodes where
+  match Relation {} = True
+  match _ = False
 
 -- getNodes' :: Test [Node]
 -- getNodes' = do

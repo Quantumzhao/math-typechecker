@@ -27,6 +27,9 @@ isSet _ = P.False
 anyClass :: Node
 anyClass = Class [] (Exist "AnyClass" "AnyClass")
 
+anything :: Node
+anything = Class [] (Exist "Anything" "Anything")
+
 {-| returns a relation actually -}
 isSubsetOf :: Node -> Node -> PContext Node
 isSubsetOf a b = do
@@ -37,13 +40,13 @@ isSubsetOf a b = do
 {-| returns a relation actually -}
 isIn :: Node -> Node -> PContext Node
 isIn x set = do
-  id <- getNewId 
-  let isInRel = Relation x set [] (Exist "isIn" id) 
+  id <- getNewId
+  let isInRel = Relation x set [] (Exist "isIn" id)
   return isInRel
 
 getElement :: Node -> String -> PContext Node
 getElement set@(Class tags i) name = do
-  newId <- getNewId 
+  newId <- getNewId
   if set == empty then error "Set.getElement: empty set"
   else do
     let e = Object set (Exist name newId)
@@ -95,6 +98,19 @@ getElement _ _ = error "Set.getElement: not a set"
 
 getNewSet :: [String] -> String -> PContext Node
 getNewSet tags name = do
-  id <- getNewId 
+  id <- getNewId
   let coll = Class (setLit : tags) (Exist name id)
   return coll
+
+-- every relation that relates this set from/to another structure, 
+-- i.e. the relations that defines this set
+-- which includes:
+-- for all a in A, a R ?
+-- A R ? 
+getConstraints :: Node -> PContext [Node]
+getConstraints c@Class {} = do
+  let parent = undefined
+  let child = undefined
+  rels <- getRelations
+  undefined
+getConstraints _ = error "getConstraints: this only applies to sets"
