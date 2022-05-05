@@ -7,17 +7,30 @@ import Text.Megaparsec.Error
 import Data.Void
 import Interpreter.AST
 import Control.Applicative.HT
+import Data.Char
 
 type Parser = Parsec Void String
 
+-- >>> runParser parseApply1 "" "f(a)"
+-- Left (ParseErrorBundle {bundleErrors = TrivialError 3 (Just (Tokens (')' :| ""))) (fromList [Tokens ('(' :| "")]) :| [], bundlePosState = PosState {pstateInput = "f(a)", pstateOffset = 0, pstateSourcePos = SourcePos {sourceName = "", sourceLine = Pos 1, sourceColumn = Pos 1}, pstateTabWidth = Pos 8, pstateLinePrefix = ""}})
+
+-- >>> runParser parseVariable "" "f"
+-- Right (Variable (Symbol {reference = "f"}))
+
 exprChars :: Parser Char
-exprChars = char '(' <|> alphaNumChar <|> char ')'
+exprChars = char '(' <|> labelChars <|> char ')'
+
+labelChars :: Parser Char
+labelChars = satisfy $ \ c -> isAlphaNum c || c `elem` ['_', '-', '\'']
 
 sb :: Parser a -> Parser b -> Parser c -> Parser c
 sb p1 p2 p = space *> p1 *> space *> p <* space <* p2
 
-parse :: Parser Command
-parse = parseDefEntry <|> parseExpr <|> parseInfo <|> parseExit
+parse :: String -> Command
+parse s = case runParser main "" s of
+  Right r -> r
+  Left l -> error $ show l
+  where main = parseDefEntry <|> expr2Command <|> parseInfo <|> parseExit
 
 parseCommand :: Parser String
 parseCommand = string "" <|> string "more info " <|> string "exit"
@@ -25,22 +38,44 @@ parseCommand = string "" <|> string "more info " <|> string "exit"
 parseDefEntry :: Parser Command
 parseDefEntry = undefined
 
-parseExpr :: Parser Command
-parseExpr = 
-  let expr = parseVariable <|> parseApply1 <|> parseApply2 <|> parseTuple in
-  lift2 AnonymousExpr (many exprChars) expr
+expr2Command :: Parser Command
+expr2Command = fmap AnonymousExpr parseExpr
+
+parseExpr :: Parser MathExp
+parseExpr = parseApply2 <|> parseApply1 <|> parseTuple <|> parseVariable
 
 parseVariable :: Parser MathExp
-parseVariable = undefined
+parseVariable = Variable <$> parseSymbol
+
+parseSymbol :: Parser Symbol
+parseSymbol = Symbol <$> some labelChars
 
 parseApply1 :: Parser MathExp
-parseApply1 = undefined
+parseApply1 = do
+  f <- parseSymbol
+  _ <- char '('
+  e <- parseExpr
+  _ <- char ')'
+  pure $ Apply1 f e
 
 parseApply2 :: Parser MathExp
-parseApply2 = undefined
+parseApply2 = do
+  f <- parseSymbol
+  char '('
+  e1 <- parseExpr
+  string ", "
+  e2 <- parseExpr
+  char ')'
+  pure $ Apply2 f e1 e2
 
 parseTuple :: Parser MathExp
-parseTuple = undefined
+parseTuple = do
+  char '('
+  e1 <- parseExpr
+  string ", "
+  e2 <- parseExpr
+  char ')'
+  pure $ Tuple e1 e2
 
 parseInfo :: Parser Command
 parseInfo = undefined
