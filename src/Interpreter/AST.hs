@@ -7,7 +7,7 @@ module Interpreter.AST where
 data Command
   -- defining a structure
   = Definition DefEntry
-  | AnonymousExpr String MathExp
+  | AnonymousExpr MathExp
   -- show more information on a structure, 
   -- needs to be reworked later
   | Info String
@@ -63,13 +63,14 @@ data Tuple = TupleDef {
 
 data Symbol = Symbol {
   reference :: String
-}
+} deriving (Show)
 
 type Closure = [(Bool, DefEntry)]
 
 data MathExp
-  = Apply1 Symbol  MathExp
+  = Apply1 Symbol MathExp
   | Apply2 Symbol MathExp MathExp
   | Relate Symbol MathExp MathExp
   | Tuple MathExp MathExp
   | Variable Symbol
+  deriving (Show)

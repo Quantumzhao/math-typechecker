@@ -32,7 +32,8 @@ formatNode t@(DirectProduct (left, right) i) nodes =
     second = nameOf $ key right,
     wheres = mergeWheres [lWhere, rWhere]
   }
-formatNode o@(Object t i) nodes = 
+formatNode o@(Object i) nodes = 
+  let t = undefined in
   let whereExpr = toWhereExpr t nodes in
   ObjectExpr {
     name = nameOf $ key o,

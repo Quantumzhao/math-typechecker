@@ -18,7 +18,6 @@ data Node
   }
   -- the most generic type of objects, can be any type
   | Object {
-    typeOf :: Node,
     key :: Identifier
   } 
   | Relation {
@@ -33,14 +32,6 @@ data Node
   }
   deriving (Eq, Show)
 
-data UpperStructure
-  = App {
-    transformation :: Node,
-    fixed :: Node
-  }
-  | Definition
-  deriving (Eq, Show)
-
 data Identifier
   = Exist {
     nameOf :: String,
@@ -52,9 +43,3 @@ data Identifier
 instance Eq Identifier where
   (==) (Exist n i) (Exist n' i') = n == n' && i == i'
   (==) _ _ = Prelude.False
-
-data ElementTemplate 
-  -- create from a defined set of elements
-  = Multiple [Node]
-  | FormOf Node
-  deriving (Eq, Show)

@@ -51,12 +51,7 @@ parseSymbol :: Parser Symbol
 parseSymbol = Symbol <$> some labelChars
 
 parseApply1 :: Parser MathExp
-parseApply1 = do
-  f <- parseSymbol
-  _ <- char '('
-  e <- parseExpr
-  _ <- char ')'
-  pure $ Apply1 f e
+parseApply1 = lift2 Apply1 parseSymbol (between (parseSymbol *> char '(') (char ')') parseExpr)
 
 parseApply2 :: Parser MathExp
 parseApply2 = do

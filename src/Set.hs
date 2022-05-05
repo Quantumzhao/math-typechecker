@@ -49,7 +49,7 @@ getElement set@(Class tags i) name = do
   newId <- getNewId
   if set == empty then error "Set.getElement: empty set"
   else do
-    let e = Object set (Exist name newId)
+    let e = Object (Exist name newId)
     addNewStatementM (e `isIn` set)
     return e
 getElement _ _ = error "Set.getElement: not a set"

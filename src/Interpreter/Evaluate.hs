@@ -20,8 +20,8 @@ evaluate com =
       return $ Res res
     Info symbol -> evalInfo symbol
     Exit -> return Halt
-    AnonymousExpr lit expr -> do
-      res <- evalAnonymousExpr expr lit
+    AnonymousExpr expr -> do
+      res <- evalAnonymousExpr expr "it"
       return $ Res res
 
 evalWithEnv ::  GraphI -> Command -> (ReturnType, GraphI)
