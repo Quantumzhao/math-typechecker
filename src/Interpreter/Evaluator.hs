@@ -1,4 +1,4 @@
-module Interpreter.Evaluate where
+module Interpreter.Evaluator where
 import ContextState
 import Control.Monad.State.Lazy
 import Printer.FormatDef hiding (Clause, tags, Exist, ForAll)
@@ -6,6 +6,7 @@ import Interpreter.AST hiding (tags)
 import Node hiding (Definition)
 import Printer.Format
 import Relation
+import Set
 
 data ReturnType
   = Res Node
@@ -85,7 +86,8 @@ evalMathDef name (FromRelationAST (RelDef (Symbol from) (Symbol to) tags)) key =
   return res
 evalMathDef name (FromObjectAST (ObjectDef (Symbol set))) key = do
   set' <- findByNameM' set
-  let res = Object set' key
+  let res = Object key
+  addNewStatementM (res `isIn` set')
   return res
 evalMathDef name (FromTupleAST (TupleDef (Symbol left) (Symbol right) tags)) key = do
   left' <- findByNameM' left
