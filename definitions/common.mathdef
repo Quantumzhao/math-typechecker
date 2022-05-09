@@ -1,18 +1,18 @@
 Empty := finite Set
 
-intersect := A' * B' -> C' where
+intersect := (A', B') -> C' where
     A' := AnySet
     B' := AnySet
     C' := AnySet
-    assume A' ~ C' by isSubsetOf
-    assume B' ~ C' by isSubsetOf
+    let A' ~ C' by isSubsetOf
+    let B' ~ C' by isSubsetOf
 
-union := Set A * Set B -> Set C where
+union := (A * B) -> C where
     A' := AnySet
     B' := AnySet
     C' := AnySet
-    assume C' ~ A' by isSubsetOf
-    assume C' ~ B' by isSubsetOf
+    let C' ~ A' by isSubsetOf
+    let C' ~ B' by isSubsetOf
 
 Natural := finite Set
 

@@ -1,0 +1,3 @@
+A := Set
+B := Set
+equal := reflexive transitive symmetric relation between A and B

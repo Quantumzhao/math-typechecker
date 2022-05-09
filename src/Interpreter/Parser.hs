@@ -26,7 +26,7 @@ labelChars :: Parser Char
 labelChars = satisfy $ \ c -> isAlphaNum c || c `elem` ['_', '-', '\'']
 
 reservedName :: [String]
-reservedName = ["Set", "Class"]
+reservedName = ["Set", "Class", "Relation", "Mapping"]
 
 sb :: Parser a -> Parser b -> Parser c -> Parser c
 sb p1 p2 p = space *> p1 *> space *> p <* space <* p2
@@ -39,6 +39,9 @@ parse s = case runParser main "" s of
 
 parseDef :: Parser Command
 parseDef = Definition <$> parseDefEntry
+
+parseTags :: Parser [String]
+parseTags = undefined
 
 getParsedDefs :: String -> [DefEntry]
 getParsedDefs contents = 
