@@ -9,17 +9,19 @@ import Node
 import Control.Monad.State
 import Interpreter.AST (Command(Definition))
 import System.IO
+import Data.Functor
 
 main :: IO ()
 main = do
-  hd <- openFile "./examples/test.mathdef" ReadMode
-  contents <- hGetContents hd
-  let (ret, env) = load contents initGraph
+  (ret, env) <- loadFiles include initGraph
   outputRes ret initGraph
   repl env
 
 initGraph :: (Graph, Int)
 initGraph = ([], 0)
+
+include :: [String]
+include = ["./examples/test.mathdef"]
 
 repl :: GraphI -> IO ()
 repl env = do
@@ -43,7 +45,12 @@ printLns (x : xs) = do
   printLns xs
 printLns [] = return ()
 
-load :: String -> GraphI -> (ReturnType, GraphI)
-load content env = 
+load :: GraphI -> String -> (ReturnType, GraphI)
+load env content =
   let inputs =  getParsedDefs content in
   runState (evaluateMany (Definition <$> inputs)) env
+
+loadFiles :: [String] -> GraphI -> IO (ReturnType, GraphI)
+loadFiles [] env = return (Halt, env)
+loadFiles [x] env = (openFile x ReadMode >>= hGetContents) <&> load env
+loadFiles (x : xs) env = loadFiles [x] env >>= loadFiles xs . snd

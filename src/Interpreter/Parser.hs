@@ -58,7 +58,6 @@ parseDefEntry = do
          try parseObjDef <|>
          try parseTupleDef <|>
          FromSymbol <$> parseSymbol
-  error (show def)
   optional $ string "where"
   w <- parseWhere <|>([] <$ empty)
   let res = DefEntry sym def w
@@ -74,7 +73,7 @@ parseMapDef = do
 
 parseClassDef :: Parser MathDef
 parseClassDef = do
-  tags <- some (some labelChars <* optional space)
+  tags <- some (some labelChars <* optional (char ' '))
   let tags' = case last tags of
         "Set" -> tags
         "Class" -> init tags

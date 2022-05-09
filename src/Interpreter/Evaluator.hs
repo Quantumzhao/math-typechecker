@@ -1,5 +1,6 @@
 module Interpreter.Evaluator where
 import ContextState
+import Control.Monad
 import Control.Monad.State.Lazy
 import Printer.FormatDef hiding (Clause, tags, Exist, ForAll)
 import Interpreter.AST hiding (tags)
@@ -27,10 +28,18 @@ evaluate com =
       res <- evalAnonymousExpr expr "it"
       return $ Res res
 
+{-| also puts the result into the graph -}
 evaluateMany :: [Command] -> PContext ReturnType
 evaluateMany [] = return Halt
-evaluateMany [x] = evaluate x
-evaluateMany (x : xs) = evaluate x >> evaluateMany xs
+evaluateMany [x] = do
+  x' <- evaluate x
+  submitEvalRes x'
+  return x'
+evaluateMany (x : xs) = evaluate x >>= submitEvalRes >> evaluateMany xs
+
+submitEvalRes :: ReturnType -> PContext ()
+submitEvalRes (Res n) = void $ addNewNode n
+submitEvalRes _ = return ()
 
 evalWithEnv ::  GraphI -> Command -> (ReturnType, GraphI)
 evalWithEnv env com = runState (evaluate com) env
@@ -48,7 +57,7 @@ evalAnonymousExpr (Apply1 (Symbol name) exp1) lit = do
         Mapping {} -> f'
         _ -> error "evalAnonymousExpr Aply1: f is not a function"
   isValid <- arg `isInB` domain f
-  if isValid then return (range f) 
+  if isValid then return (range f)
   else error "evalAnonymouExpr Apply1: arg is not in domain"
 evalAnonymousExpr (Apply2 (Symbol name) exp1 exp2) lit = undefined
 evalAnonymousExpr (Relate (Symbol name) exp1 exp2) lit = error "cannot evaluate a relation"

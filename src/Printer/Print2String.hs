@@ -8,18 +8,18 @@ import Printer.FormatDef as P
 import Data.List (intercalate)
 
 printExpr :: Expr -> [String]
-printExpr (SetExpr name tags wheres) = 
+printExpr (SetExpr name tags wheres) =
   if name == "Universal" || name == "Empty" then [name]
-  else (name ++ " is " ++ intercalate ", " tags ++ " " ++ name) 
+  else (name ++ " is " ++ intercalate ", " tags ++ " " ++ name)
   `combineWith` wheres
 
 printExpr (MappingExpr name tags left right wheres) =
-  let main = name ++ " is " ++ left ++ " -> " ++ right ++
-             ", -> is " ++ intercalate ", " tags ++ ", " 
+  let tagsStr = if null tags then "" else ", -> is " ++ intercalate ", " tags ++ ", "
+      main = name ++ " is " ++ left ++ " -> " ++ right ++ tagsStr
   in main `combineWith` wheres
 
 printExpr (RelExpr left right by tags wheres) =
-  let main = left ++ " is related to " ++ right ++ 
+  let main = left ++ " is related to " ++ right ++
              " by " ++ by ++ intercalate ", " tags
   in main `combineWith` wheres
 
