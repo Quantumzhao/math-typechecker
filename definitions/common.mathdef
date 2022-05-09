@@ -1,19 +1,23 @@
-Empty := Set Empty
-
-isSubsetOf := A ~ B where
-    A := AnySet
-    B := AnySet
+Empty := finite Set
 
 intersect := A' * B' -> C' where
     A' := AnySet
     B' := AnySet
     C' := AnySet
-    C' isSubsetOf A
-    C' isSubsetOf B
+    assume A' ~ C' by isSubsetOf
+    assume B' ~ C' by isSubsetOf
 
 union := Set A * Set B -> Set C where
-    A' isSubsetOf C'
-    B' isSubsetOf C'
-    A' isIn A
-    B' isIn B
-    C' isIn C
+    A' := AnySet
+    B' := AnySet
+    C' := AnySet
+    assume C' ~ A' by isSubsetOf
+    assume C' ~ B' by isSubsetOf
+
+Natural := finite Set
+
+Real := Set
+
+assume Natural ~ Real by isSubsetOf
+
+add := Real * Real -> Real

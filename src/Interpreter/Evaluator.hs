@@ -7,17 +7,19 @@ import Node hiding (Definition)
 import Printer.Format
 import Relation
 import Set
+import Interpreter.Parser
 
 data ReturnType
   = Res Node
   | Err String
   | Halt
+  deriving (Show, Eq)
 
 evaluate :: Command -> PContext ReturnType
 evaluate com =
   case com of
     Definition def -> do
-      res <- evalDefinition def True
+      res <- evalDefinition def False
       return $ Res res
     Info symbol -> evalInfo symbol
     Exit -> return Halt
@@ -25,8 +27,16 @@ evaluate com =
       res <- evalAnonymousExpr expr "it"
       return $ Res res
 
+evaluateMany :: [Command] -> PContext ReturnType
+evaluateMany [] = return Halt
+evaluateMany [x] = evaluate x
+evaluateMany (x : xs) = evaluate x >> evaluateMany xs
+
 evalWithEnv ::  GraphI -> Command -> (ReturnType, GraphI)
 evalWithEnv env com = runState (evaluate com) env
+
+-- >>> evalWithEnv ([], 0) (parse "A := Set")
+-- (Res (Class {tags = ["Set"], key = Exist {nameOf = "A", id = "0"}}),([],1))
 
 evalInfo symbol = undefined
 
@@ -55,8 +65,7 @@ evalDefinition (DefEntry name body closure) isTemplate = do
   evalClosure closure
   id <- getNewId
   let i = if isTemplate then ForAll else Exist name id
-  node' <- evalMathDef name body i
-  addNewNode node'
+  evalMathDef name body i
 
 -- convert the definition to a node
 -- then return it

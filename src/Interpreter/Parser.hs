@@ -1,27 +1,32 @@
+{-# LANGUAGE TupleSections #-}
 module Interpreter.Parser where
 
 import Prelude hiding ((<>))
-import Text.Megaparsec
+import Text.Megaparsec hiding (parse)
 import Text.Megaparsec.Char
-import Text.Megaparsec.Error
 import Data.Void
 import Interpreter.AST
-import Control.Applicative.HT
 import Data.Char
+import qualified Text.Megaparsec.Char.Lexer as L
+import Control.Monad (void)
 
 type Parser = Parsec Void String
 
--- >>> runParser parseApply1 "" "f(a)"
--- Left (ParseErrorBundle {bundleErrors = TrivialError 3 (Just (Tokens (')' :| ""))) (fromList [Tokens ('(' :| "")]) :| [], bundlePosState = PosState {pstateInput = "f(a)", pstateOffset = 0, pstateSourcePos = SourcePos {sourceName = "", sourceLine = Pos 1, sourceColumn = Pos 1}, pstateTabWidth = Pos 8, pstateLinePrefix = ""}})
+-- >>> parseDef "A := finite Set"
+-- Couldn't match expected type ‘[Char] -> t’
+--             with actual type ‘ParsecT Void String Identity Command’
 
--- >>> runParser parseVariable "" "f"
--- Right (Variable (Symbol {reference = "f"}))
+-- >>> runParser parseDef "" "f := A -> B"
+-- Right (Definition (DefEntry {symbol = "f", defBody = FromMappingAST (MappingDef {domainM = Symbol {reference = "A"}, rangeM = Symbol {reference = "B"}, tagsM = []}), wheres = []}))
 
 exprChars :: Parser Char
 exprChars = char '(' <|> labelChars <|> char ')'
 
 labelChars :: Parser Char
 labelChars = satisfy $ \ c -> isAlphaNum c || c `elem` ['_', '-', '\'']
+
+reservedName :: [String]
+reservedName = ["Set", "Class"]
 
 sb :: Parser a -> Parser b -> Parser c -> Parser c
 sb p1 p2 p = space *> p1 *> space *> p <* space <* p2
@@ -30,28 +35,86 @@ parse :: String -> Command
 parse s = case runParser main "" s of
   Right r -> r
   Left l -> error $ show l
-  where main = parseDefEntry <|> expr2Command <|> parseInfo <|> parseExit
+  where main = try parseExit <|> try parseDef <|> try expr2Command <|> try parseInfo
 
-parseCommand :: Parser String
-parseCommand = string "" <|> string "more info " <|> string "exit"
+parseDef :: Parser Command
+parseDef = Definition <$> parseDefEntry
 
-parseDefEntry :: Parser Command
-parseDefEntry = undefined
+getParsedDefs :: String -> [DefEntry]
+getParsedDefs contents = 
+  let parser = runParser (some parseDefEntry) "" contents in
+  case parser of
+    Right r -> r
+    Left l -> error $ show l
+
+parseDefEntry :: Parser DefEntry
+parseDefEntry = do
+  many (char '\n')
+  sym <- some labelChars
+  string " := "
+  def <- try parseMapDef <|>
+         try parseClassDef <|>
+         try parseRelDef <|>
+         try parseObjDef <|>
+         try parseTupleDef <|>
+         FromSymbol <$> parseSymbol
+  error (show def)
+  optional $ string "where"
+  w <- parseWhere <|>([] <$ empty)
+  let res = DefEntry sym def w
+  pure res
+
+parseMapDef :: Parser MathDef
+parseMapDef = do
+  domain <- parseSymbol
+  string " -> "
+  -- error $ show domain
+  range <- parseSymbol
+  pure $ FromMappingAST $ MappingDef domain range []
+
+parseClassDef :: Parser MathDef
+parseClassDef = do
+  tags <- some (some labelChars <* optional space)
+  let tags' = case last tags of
+        "Set" -> tags
+        "Class" -> init tags
+        s -> error $ "parseClassDef: " ++ s
+  pure $ FromClassAST $ ClassDef tags'
+
+parseRelDef :: Parser MathDef
+parseRelDef = undefined
+
+parseObjDef :: Parser MathDef
+parseObjDef = undefined
+
+parseTupleDef :: Parser MathDef
+parseTupleDef = undefined
+
+parseWhere :: Parser Closure
+parseWhere = pure []
 
 expr2Command :: Parser Command
-expr2Command = fmap AnonymousExpr parseExpr
+expr2Command = AnonymousExpr <$> parseExpr
 
 parseExpr :: Parser MathExp
-parseExpr = parseApply2 <|> parseApply1 <|> parseTuple <|> parseVariable
-
-parseVariable :: Parser MathExp
-parseVariable = Variable <$> parseSymbol
+parseExpr = try parseApply2 <|> try parseApply1 <|> try parseTuple <|> try (Variable <$> parseSymbol)
 
 parseSymbol :: Parser Symbol
 parseSymbol = Symbol <$> some labelChars
 
+-- no leading space, one or more trailing space
+-- parseTags :: Parser [String]
+-- parseTags =
+--   let validTag = some (satisfy (\ (c :: Char) -> not False)) in
+--   many (some labelChars <* space)
+
 parseApply1 :: Parser MathExp
-parseApply1 = lift2 Apply1 parseSymbol (between (parseSymbol *> char '(') (char ')') parseExpr)
+parseApply1 = do
+  f <- parseSymbol
+  char '('
+  e <- parseExpr
+  char ')'
+  pure $ Apply1 f e
 
 parseApply2 :: Parser MathExp
 parseApply2 = do
@@ -76,4 +139,38 @@ parseInfo :: Parser Command
 parseInfo = undefined
 
 parseExit :: Parser Command
-parseExit = Exit <$ string "Exit"
+parseExit = Exit <$ string "exit"
+
+
+
+-- >>> runParser (pItemList <* eof) "" "something\n  one"
+-- Right ("something",[("one",[])])
+
+lineComment :: Parser ()
+lineComment = L.skipLineComment "#"
+
+scn :: Parser ()
+scn = L.space space1 lineComment empty
+
+sc :: Parser ()
+sc = L.space (void $ some (char ' ' <|> char '\t')) lineComment empty
+
+lexeme :: Parser a -> Parser a
+lexeme = L.lexeme sc
+
+pItem :: Parser String
+pItem = lexeme (some (alphaNumChar <|> char '-')) <?> "list item"
+
+pComplexItem :: Parser (String, [String])
+pComplexItem = L.indentBlock scn p
+  where
+    p = do
+      header <- pItem
+      return (L.IndentMany Nothing (return . (header, )) pItem)
+
+pItemList :: Parser (String, [(String, [String])])
+pItemList = L.nonIndented scn (L.indentBlock scn p)
+  where
+    p = do
+      header <- pItem
+      return (L.IndentSome Nothing (return . (header, )) pComplexItem)

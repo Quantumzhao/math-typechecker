@@ -9,10 +9,6 @@ C is Natural
 
 > powerSet := AnySet -> Set of s where s is subset of AnySet
 
-> PB := powerSet B
-PB is Set type of s where
-    s isSubsetOf B
-
 > moreinfo PB
 PB is Set typeof s where
     s is subset of B where
@@ -27,7 +23,7 @@ f is Set PB -> Set B where
         s is subset of B 
     B is Set B
 
-> AB := A intersect B
+> AB := intersect(A, B)
 AB is finite Set AB where 
     AB is related to B by subset
     AB is related to A by subset
@@ -61,7 +57,7 @@ A isrelatedto B by ArB
 > A isrelatedto B
 Invalid Input
 
-> f := A -> B -> C
+> f := A * B -> C
 f is finite Set A -> Set B -> Set C
 
 > f(ab)

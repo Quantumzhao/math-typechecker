@@ -7,7 +7,6 @@ data Expr
   = SetExpr {
     name :: String,
     tags :: [String],
-    body :: String,
     wheres :: WhereExpr
   }
   | MappingExpr {

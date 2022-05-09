@@ -8,9 +8,9 @@ import Printer.FormatDef as P
 import Data.List (intercalate)
 
 printExpr :: Expr -> [String]
-printExpr (SetExpr name tags body wheres) = 
+printExpr (SetExpr name tags wheres) = 
   if name == "Universal" || name == "Empty" then [name]
-  else (name ++ " is " ++ intercalate ", " tags ++ " Set " ++ name ++ body) 
+  else (name ++ " is " ++ intercalate ", " tags ++ " " ++ name) 
   `combineWith` wheres
 
 printExpr (MappingExpr name tags left right wheres) =

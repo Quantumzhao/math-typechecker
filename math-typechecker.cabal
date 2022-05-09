@@ -27,7 +27,7 @@ library
   exposed-modules:
       ContextState
       Interpreter.AST
-      Interpreter.Evaluate
+      Interpreter.Evaluator
       Interpreter.Parser
       Interpreter.Tokens
       Mapping
