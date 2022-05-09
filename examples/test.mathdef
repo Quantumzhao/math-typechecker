@@ -1,5 +1,5 @@
 A := Set
 
-B := Set
+B := finite Set
 
-f := A -> B
+f := injective Mapping A -> B

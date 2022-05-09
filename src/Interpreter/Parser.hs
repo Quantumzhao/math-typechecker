@@ -9,6 +9,7 @@ import Interpreter.AST
 import Data.Char
 import qualified Text.Megaparsec.Char.Lexer as L
 import Control.Monad (void)
+import Tags
 
 type Parser = Parsec Void String
 
@@ -16,8 +17,12 @@ type Parser = Parsec Void String
 -- Couldn't match expected type ‘[Char] -> t’
 --             with actual type ‘ParsecT Void String Identity Command’
 
--- >>> runParser parseDef "" "f := A -> B"
--- Right (Definition (DefEntry {symbol = "f", defBody = FromMappingAST (MappingDef {domainM = Symbol {reference = "A"}, rangeM = Symbol {reference = "B"}, tagsM = []}), wheres = []}))
+-- >>> runParser parseDef "" "f := Mapping A -> B"
+-- ["f"]
+
+-- >>> runParser parseMapDef "" "injective Mapping A -> B"
+-- Right (FromMappingAST (MappingDef {domainM = Symbol {reference = "A"}, rangeM = Symbol {reference = "B"}, tagsM = ["injective"]}))
+
 
 exprChars :: Parser Char
 exprChars = char '(' <|> labelChars <|> char ')'
@@ -27,6 +32,9 @@ labelChars = satisfy $ \ c -> isAlphaNum c || c `elem` ['_', '-', '\'']
 
 reservedName :: [String]
 reservedName = ["Set", "Class", "Relation", "Mapping"]
+
+parseValidTags :: [String] -> Parser String
+parseValidTags tags = choice (string <$> tags) <* space
 
 sb :: Parser a -> Parser b -> Parser c -> Parser c
 sb p1 p2 p = space *> p1 *> space *> p <* space <* p2
@@ -40,11 +48,8 @@ parse s = case runParser main "" s of
 parseDef :: Parser Command
 parseDef = Definition <$> parseDefEntry
 
-parseTags :: Parser [String]
-parseTags = undefined
-
 getParsedDefs :: String -> [DefEntry]
-getParsedDefs contents = 
+getParsedDefs contents =
   let parser = runParser (some parseDefEntry) "" contents in
   case parser of
     Right r -> r
@@ -68,20 +73,20 @@ parseDefEntry = do
 
 parseMapDef :: Parser MathDef
 parseMapDef = do
+  tags <- many (parseValidTags mappingTags) <* string "Mapping "
   domain <- parseSymbol
   string " -> "
   -- error $ show domain
   range <- parseSymbol
-  pure $ FromMappingAST $ MappingDef domain range []
+  pure $ FromMappingAST $ MappingDef domain range tags
 
 parseClassDef :: Parser MathDef
 parseClassDef = do
-  tags <- some (some labelChars <* optional (char ' '))
-  let tags' = case last tags of
-        "Set" -> tags
-        "Class" -> init tags
-        s -> error $ "parseClassDef: " ++ s
-  pure $ FromClassAST $ ClassDef tags'
+  tags <- many (parseValidTags classTags)
+  next <- string "Set" <|> string "Class"
+  optional space
+  let tags' = if next == "Set" then tags ++ ["Set"] else tags
+  pure $ FromClassAST $ ClassDef tags
 
 parseRelDef :: Parser MathDef
 parseRelDef = undefined
@@ -142,8 +147,6 @@ parseInfo = undefined
 
 parseExit :: Parser Command
 parseExit = Exit <$ string "exit"
-
-
 
 -- >>> runParser (pItemList <* eof) "" "something\n  one"
 -- Right ("something",[("one",[])])
