@@ -114,3 +114,8 @@ getConstraints c@Class {} = do
   rels <- getRelations
   undefined
 getConstraints _ = error "getConstraints: this only applies to sets"
+
+isSameAs :: Node -> Node -> Bool
+isSameAs (Alias a _) b = a == b
+isSameAs a (Alias b _) = a == b
+isSameAs a b = a == b

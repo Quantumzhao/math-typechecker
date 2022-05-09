@@ -45,7 +45,7 @@ isSubsetOfB a b = do
   graph <- getNodes
   case findFirst (a `isSubsetOf'` b) graph of
     Just _ -> return True
-    Nothing -> return False
+    Nothing -> return (a `isSameAs` b)
   where
     isSubsetOf' a b (Relation from to _ (Exist "subset" _)) = a == from && b == to
     isSubsetOf' a b _ = False

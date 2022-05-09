@@ -1,7 +1,7 @@
 module Interpreter.Evaluator where
 import ContextState
 import Control.Monad
-import Control.Monad.State.Lazy
+import Control.Monad.State.Lazy hiding (void)
 import Printer.FormatDef hiding (Clause, tags, Exist, ForAll)
 import Interpreter.AST hiding (tags)
 import Node hiding (Definition)
@@ -56,9 +56,9 @@ evalAnonymousExpr (Apply1 (Symbol name) exp1) lit = do
   let f = case f' of
         Mapping {} -> f'
         _ -> error "evalAnonymousExpr Aply1: f is not a function"
-  isValid <- arg `isInB` domain f
+  isValid <- liftM2 (||) (arg `isInB` domain f) (arg `isSubsetOfB` domain f)
   if isValid then return (range f)
-  else error "evalAnonymouExpr Apply1: arg is not in domain"
+  else error "evalAnonymousExpr Apply1: arg is not in domain"
 evalAnonymousExpr (Apply2 (Symbol name) exp1 exp2) lit = undefined
 evalAnonymousExpr (Relate (Symbol name) exp1 exp2) lit = error "cannot evaluate a relation"
 evalAnonymousExpr (Tuple exp1 exp2) lit = do
