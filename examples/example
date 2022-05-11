@@ -14,8 +14,8 @@ PB is Set typeof s where
     s is subset of B where
         B is Set B
 
-> f := PB -> B
-f is Set PB -> Set B
+> f := Mapping PB -> B
+f is PB -> B
 
 > moreinfo f
 f is Set PB -> Set B where
@@ -93,4 +93,4 @@ Set typeof s where
     b is element in B
 (a, b) is element in A cross B
 
-> h := A -> B, -> is injective structural
+> h := A -> B, -> is injective
