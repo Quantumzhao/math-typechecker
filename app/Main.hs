@@ -4,10 +4,10 @@ import ContextState
 import Interpreter.Evaluator
 import Interpreter.Parser
 import Printer.Print2String
-import Printer.Format (formatNode)
+import Printer.Format
 import Node
 import Control.Monad.State
-import Interpreter.AST (Command(Definition))
+import Interpreter.AST
 import System.IO
 import Data.Functor
 
