@@ -26,18 +26,22 @@ include = ["./examples/test.mathdef"]
 repl :: GraphI -> IO ()
 repl env = do
   input <- getLine
-  let (res, env') = evalWithEnv env (parse input)
+  let t@(res, env') = evalWithEnv env (parse input)
   outputRes res env'
   if res == Halt then return ()
-  else repl env'
+  else repl (updateEnv t)
 
 outputRes :: ReturnType -> GraphI -> IO ()
 outputRes (Err msg) _ = putStrLn msg
 outputRes (Res n) env = printLns $ printExpr $ formatNode n (fst env)
 outputRes Halt _ = return ()
 
+updateEnv :: (ReturnType, GraphI) -> GraphI
+updateEnv (Res r, (ns, i)) = (r : ns, i)
+updateEnv (_, g) = g
+
 -- >>> fst $ evalWithEnv ([], 0) (parse "A := Set A")
--- No instance for (Show ReturnType) arising from a use of ‘evalPrint’
+-- Res (Class {tags = ["Set"], key = Exist {nameOf = "A", id = "0"}})
 
 printLns :: [String] -> IO ()
 printLns (x : xs) = do

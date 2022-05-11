@@ -12,21 +12,6 @@ genRelation relFrom relTo tags name = do
   let rel = Relation relFrom relTo tags (Exist name id)
   return rel
 
--- applyR (Relation dom cod tags name _) b = do
---   nodes <- getNodes
---   if elems equivalenceRel tags then do
---     newId <- getNewId 
---     newId' <- getNewId
---     let newNode :: Node = Set (FormOf $ Relation dom b tags name newId) [eqClass] ("eq " ++ nameOf dom) newId'
---     addNewStatement (newNode `isSubsetOf` dom)
---     return eqClass
---   else undefined
--- applyR _ _ = error "Relation.applyR: not a relation"
-
--- -- a ~ ?
--- applyL (Relation dom cod tags name _) a = do
--- applyL _ a = error "Relation.applyL: not a relation"
-
 subsetFnDef :: Node
 subsetFnDef = Relation allSets allSets orderedRel (Exist "subset" "subset")
 
@@ -47,7 +32,7 @@ isSubsetOfB a b = do
     Just _ -> return True
     Nothing -> return (a `isSameAs` b)
   where
-    isSubsetOf' a b (Relation from to _ (Exist "subset" _)) = a == from && b == to
+    isSubsetOf' a b (Relation from to _ (Exist "subset" _)) = a `isSameAs` from && b `isSameAs` to
     isSubsetOf' a b _ = False
 
 isInB :: Node -> Node -> PContext Bool
@@ -59,7 +44,7 @@ isInB e set
     Just _ -> return True
     Nothing -> return False
   where 
-    isIn' a b (Relation from to _ (Exist "isIn" _)) = a == from && b == to
+    isIn' a b (Relation from to _ (Exist "isIn" _)) = a `isSameAs` from && b `isSameAs` to
     isIn' _ _ _ = False
 
 get'isIn'relation :: Graph -> Node

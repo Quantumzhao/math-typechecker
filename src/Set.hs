@@ -116,6 +116,8 @@ getConstraints c@Class {} = do
 getConstraints _ = error "getConstraints: this only applies to sets"
 
 isSameAs :: Node -> Node -> Bool
-isSameAs (Alias a _) b = a == b
-isSameAs a (Alias b _) = a == b
-isSameAs a b = a == b
+isSameAs a b = trackAlias a == trackAlias b
+
+trackAlias :: Node -> Node
+trackAlias (Alias ref _) = trackAlias ref
+trackAlias n = n

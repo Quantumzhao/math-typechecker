@@ -35,35 +35,3 @@ import Relation
   newId <- getNewId
   let res = DirectProduct (n1, n2) (Exist "cross" newId)
   return res
-
--- crossFnDef :: Node
--- crossFnDef = Mapping {
---   domain = allSets <.> allSets,
---   range = allSets <.> allSets,
---   tags = [surjectiveTag, injectiveTag],
---   key = Exist "cross" "cross" 
--- }
-
--- intersectFnDef ::  Node
--- intersectFnDef = Mapping {
---   domain = allSets <.> allSets,
---   range = allSets,
---   tags = [],
---   key = Exist "intersect" "intersect"
--- }
-
--- unionFnDef :: Node
--- unionFnDef = Mapping (allSets <.> allSets) allSets [] (Exist "union" "union")
-
--- relComplFnDef :: Node
--- relComplFnDef = Mapping (allSets <.> allSets) allSets [] (Exist "minus" "minus")
-
--- relcompl :: Node -> Node -> String -> PContext Node
--- relcompl a b name
---   | isSet a && isSet b = do
---     id <- getNewId 
---     let application = relComplFnDef
---     let newNode = Class (tags a) (Exist name id)
---     addNewStatementM (newNode `isSubsetOf` a)
---     return newNode
---   | otherwise = error "complement: not sets"

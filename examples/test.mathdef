@@ -3,3 +3,5 @@ A := Set
 B := finite Set
 
 f := injective Mapping A -> B
+
+R := Relation between A and B

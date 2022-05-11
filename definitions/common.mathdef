@@ -3,21 +3,22 @@ Empty := finite Set
 intersect := (A', B') -> C' where
     A' := AnySet
     B' := AnySet
-    C' := AnySet
-    let A' ~ C' by isSubsetOf
-    let B' ~ C' by isSubsetOf
+    C' := Intersection where
+        Intersection isSubsetOf AnySet
+    A' ~ C' by isSubsetOf
+    B' ~ C' by isSubsetOf
 
-union := (A * B) -> C where
+union := (A, B) -> C where
     A' := AnySet
     B' := AnySet
     C' := AnySet
-    let C' ~ A' by isSubsetOf
-    let C' ~ B' by isSubsetOf
+    C' ~ A' by isSubsetOf
+    C' ~ B' by isSubsetOf
 
 Natural := finite Set
 
 Real := Set
 
-assume Natural ~ Real by isSubsetOf
+Natural ~ Real by isSubsetOf
 
 add := Real * Real -> Real

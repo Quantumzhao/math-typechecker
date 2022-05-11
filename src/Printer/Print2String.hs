@@ -10,11 +10,11 @@ import Data.List (intercalate)
 printExpr :: Expr -> [String]
 printExpr (SetExpr name tags wheres) =
   if name == "Universal" || name == "Empty" then [name]
-  else (name ++ " is " ++ intercalate ", " tags ++ " " ++ name)
+  else (name ++ " is " ++ unwords tags ++ " " ++ name)
   `combineWith` wheres
 
 printExpr (MappingExpr name tags left right wheres) =
-  let tagsStr = if null tags then "" else ", -> is " ++ intercalate ", " tags ++ ", "
+  let tagsStr = if null tags then "" else ", -> is " ++ unwords tags ++ ", "
       main = name ++ " is " ++ left ++ " -> " ++ right ++ tagsStr
   in main `combineWith` wheres
 

@@ -8,9 +8,6 @@ data Command
   -- defining a structure
   = Definition DefEntry
   | AnonymousExpr MathExp
-  -- show more information on a structure, 
-  -- needs to be reworked later
-  | Info String
   -- meet its inevitable demise
   | Exit
   deriving (Show)
@@ -34,7 +31,7 @@ data MathDef
   | FromRelationAST Relation
   | FromObjectAST Object
   | FromTupleAST Tuple
-  | FromSymbol Symbol
+  | FromExpr MathExp
   deriving (Show)
 
 data Class = ClassDef {
@@ -42,25 +39,24 @@ data Class = ClassDef {
 } deriving (Show)
 
 data Mapping = MappingDef {
-  domainM :: Symbol,
-  rangeM :: Symbol,
+  domainM :: MathExp,
+  rangeM :: MathExp,
   tagsM :: [String]
 } deriving (Show)
 
 data Relation = RelDef {
-  fromR :: Symbol,
-  toR :: Symbol,
+  fromR :: MathExp,
+  toR :: MathExp,
   tagsR :: [String]
 } deriving (Show)
 
 data Object = ObjectDef {
-  setO :: Symbol
+  setO :: MathExp
 } deriving (Show)
 
 data Tuple = TupleDef {
-  leftT :: Symbol,
-  rightT :: Symbol,
-  tags :: [String]
+  leftT :: MathExp,
+  rightT :: MathExp
 } deriving (Show)
 
 data Symbol = Symbol {

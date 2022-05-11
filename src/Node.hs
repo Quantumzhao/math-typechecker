@@ -8,7 +8,6 @@ data Node
     key :: Identifier
   }
   | Class {
-    -- defOf :: ElementTemplate,
     tags :: [String], 
     key :: Identifier
   }

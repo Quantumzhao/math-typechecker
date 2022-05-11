@@ -22,10 +22,9 @@ evaluate com =
     Definition def -> do
       res <- evalDefinition def False
       return $ Res res
-    Info symbol -> evalInfo symbol
     Exit -> return Halt
     AnonymousExpr expr -> do
-      res <- evalAnonymousExpr expr "it"
+      res <- evalExpr expr
       return $ Res res
 
 {-| also puts the result into the graph -}
@@ -47,44 +46,42 @@ evalWithEnv env com = runState (evaluate com) env
 -- >>> evalWithEnv ([], 0) (parse "A := Set")
 -- (Res (Class {tags = ["Set"], key = Exist {nameOf = "A", id = "0"}}),([],1))
 
-evalInfo symbol = undefined
-
-evalAnonymousExpr :: MathExp -> String -> PContext Node
-evalAnonymousExpr (Apply1 (Symbol name) exp1) lit = do
-  arg <- evalAnonymousExpr exp1 lit
+evalExpr :: MathExp -> PContext Node
+evalExpr (Apply1 (Symbol name) exp1) = do
+  arg <- evalExpr exp1
   f' <- findByNameM' name
   let f = case f' of
         Mapping {} -> f'
-        _ -> error "evalAnonymousExpr Aply1: f is not a function"
+        _ -> error "evalExpr Aply1: f is not a function"
   isValid <- liftM2 (||) (arg `isInB` domain f) (arg `isSubsetOfB` domain f)
   if isValid then return (range f)
-  else error "evalAnonymousExpr Apply1: arg is not in domain"
-evalAnonymousExpr (Apply2 (Symbol name) exp1 exp2) lit = undefined
-evalAnonymousExpr (Relate (Symbol name) exp1 exp2) lit = error "cannot evaluate a relation"
-evalAnonymousExpr (Tuple exp1 exp2) lit = do
-  left <- evalAnonymousExpr exp1 lit
-  right <- evalAnonymousExpr exp2 lit
+  else error "evalExpr Apply1: arg is not in domain"
+evalExpr (Apply2 (Symbol name) exp1 exp2) = undefined
+evalExpr (Relate (Symbol name) exp1 exp2) = error "cannot evaluate a relation"
+evalExpr (Tuple exp1 exp2) = do
+  left <- evalExpr exp1
+  right <- evalExpr exp2
   id <- getNewId
-  let res = DirectProduct (left, right) (Exist lit id)
+  let res = DirectProduct (left, right) (Exist (show left ++ show right) id)
   return res
-evalAnonymousExpr (Variable (Symbol name)) lit = findByNameM' name
+evalExpr (Variable (Symbol name)) = findByNameM' name
 
 evalDefinition :: DefEntry -> Bool -> PContext Node
 evalDefinition (DefEntry name body closure) isTemplate = do
   evalClosure closure
   id <- getNewId
   let i = if isTemplate then ForAll else Exist name id
-  evalMathDef name body i
+  evalMathDef body i
 
 -- convert the definition to a node
 -- then return it
-evalMathDef :: String -> MathDef -> Identifier -> PContext Node
-evalMathDef name (FromClassAST (ClassDef tags)) key = do
+evalMathDef :: MathDef -> Identifier -> PContext Node
+evalMathDef (FromClassAST (ClassDef tags)) key = do
   let res = Class tags key
   return res
-evalMathDef name (FromMappingAST (MappingDef (Symbol domain) (Symbol range) tags)) key = do
-  d' <- findByNameM' domain
-  r' <- findByNameM' range
+evalMathDef (FromMappingAST (MappingDef domain range tags)) key = do
+  d' <- evalExpr domain
+  r' <- evalExpr range
   let res = Mapping {
     domain = d',
     range = r',
@@ -92,9 +89,9 @@ evalMathDef name (FromMappingAST (MappingDef (Symbol domain) (Symbol range) tags
     key = key
   }
   return res
-evalMathDef name (FromRelationAST (RelDef (Symbol from) (Symbol to) tags)) key = do
-  from' <- findByNameM' from
-  to' <- findByNameM' to
+evalMathDef (FromRelationAST (RelDef from to tags)) key = do
+  from' <- evalExpr from
+  to' <- evalExpr to
   let res = Relation {
     domain = from',
     codomain = to',
@@ -102,18 +99,18 @@ evalMathDef name (FromRelationAST (RelDef (Symbol from) (Symbol to) tags)) key =
     key = key
   }
   return res
-evalMathDef name (FromObjectAST (ObjectDef (Symbol set))) key = do
-  set' <- findByNameM' set
+evalMathDef (FromObjectAST (ObjectDef set)) key = do
+  set' <- evalExpr set
   let res = Object key
   addNewStatementM (res `isIn` set')
   return res
-evalMathDef name (FromTupleAST (TupleDef (Symbol left) (Symbol right) tags)) key = do
-  left' <- findByNameM' left
-  right' <- findByNameM' right
+evalMathDef (FromTupleAST (TupleDef left right)) key = do
+  left' <- evalExpr left
+  right' <- evalExpr right
   let res = DirectProduct (left', right') key
   return res
-evalMathDef name (FromSymbol s) key = do
-  n <- findByNameM' name
+evalMathDef (FromExpr s) key = do
+  n <- evalExpr s
   return $ Alias n key
 
 -- add closure to the environment

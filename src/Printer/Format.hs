@@ -49,7 +49,7 @@ formatNode (Relation domain codomain tags i) nodes =
     tags = tags,
     wheres = mergeWheres [leftWhere, rightWhere]
   }
-formatNode (Alias n i) nodes = undefined
+formatNode (Alias n i) nodes = formatNode (trackAlias n) nodes
 
 getName :: Identifier -> String
 getName (Exist name id) = name
