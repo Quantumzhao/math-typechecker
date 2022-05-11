@@ -17,15 +17,11 @@ type Parser = Parsec Void String
 -- Couldn't match expected type ‘[Char] -> t’
 --             with actual type ‘ParsecT Void String Identity Command’
 
--- >>> runParser parseDef "" "f := Mapping A -> B"
--- ["f"]
+-- >>> runParser parseDef "" "A := finite Set"
+-- Right (Definition (DefEntry {symbol = "A", defBody = FromClassAST (ClassDef {tagsC = ["finite","Set"]}), wheres = []}))
 
 -- >>> runParser parseMapDef "" "injective Mapping A -> B"
 -- Right (FromMappingAST (MappingDef {domainM = Symbol {reference = "A"}, rangeM = Symbol {reference = "B"}, tagsM = ["injective"]}))
-
-
-exprChars :: Parser Char
-exprChars = char '(' <|> labelChars <|> char ')'
 
 labelChars :: Parser Char
 labelChars = satisfy $ \ c -> isAlphaNum c || c `elem` ['_', '-', '\'']
@@ -43,15 +39,25 @@ parse :: String -> Command
 parse s = case runParser main "" s of
   Right r -> r
   Left l -> error $ show l
-  where main = try parseExit <|> try parseDef <|> try expr2Command <|> try parseInfo
+  where 
+    main = choice [
+        try parseExit,
+        try parseDef, 
+        try expr2Command
+      ]
 
 parseDef :: Parser Command
 parseDef = Definition <$> parseDefEntry
 
 getParsedDefs :: String -> [DefEntry]
-getParsedDefs contents =
-  let parser = runParser (some parseDefEntry) "" contents in
-  case parser of
+getParsedDefs contents = 
+  let main = do
+            ds <- some parseDefEntry
+            optional anySingle
+            pure ds
+  in
+  let parsed = runParser main "" contents in
+  case parsed of
     Right r -> r
     Left l -> error $ show l
 
@@ -60,24 +66,29 @@ parseDefEntry = do
   many (char '\n')
   sym <- some labelChars
   string " := "
-  def <- try parseMapDef <|>
-         try parseClassDef <|>
-         try parseRelDef <|>
-         try parseObjDef <|>
-         try parseTupleDef <|>
-         FromSymbol <$> parseSymbol
+  def <- parseMathDef
   optional $ string "where"
-  w <- parseWhere <|>([] <$ empty)
+  w <- parseWhere <|> ([] <$ empty)
   let res = DefEntry sym def w
   pure res
+
+parseMathDef :: Parser MathDef
+parseMathDef = choice [
+    try parseMapDef,
+    try parseClassDef,
+    try parseRelDef,
+    try parseObjDef,
+    try parseTupleDef,
+    FromExpr <$> parseExpr
+  ]
 
 parseMapDef :: Parser MathDef
 parseMapDef = do
   tags <- many (parseValidTags mappingTags) <* string "Mapping "
-  domain <- parseSymbol
+  domain <- parseExpr
   string " -> "
   -- error $ show domain
-  range <- parseSymbol
+  range <- parseExpr
   pure $ FromMappingAST $ MappingDef domain range tags
 
 parseClassDef :: Parser MathDef
@@ -86,16 +97,27 @@ parseClassDef = do
   next <- string "Set" <|> string "Class"
   optional space
   let tags' = if next == "Set" then tags ++ ["Set"] else tags
-  pure $ FromClassAST $ ClassDef tags
+  pure $ FromClassAST $ ClassDef tags'
 
 parseRelDef :: Parser MathDef
-parseRelDef = undefined
+parseRelDef = do
+  tags <- many (parseValidTags relationTags) <* string "Relation between "
+  from <- parseExpr
+  string " and "
+  to <- parseExpr
+  pure $ FromRelationAST $ RelDef from to tags
 
 parseObjDef :: Parser MathDef
-parseObjDef = undefined
+parseObjDef = string "element in " *> (FromObjectAST . ObjectDef <$> parseExpr)
 
 parseTupleDef :: Parser MathDef
-parseTupleDef = undefined
+parseTupleDef = do
+  char '('
+  left <- parseExpr
+  string ", "
+  right <- parseExpr
+  char ')'
+  pure $ FromTupleAST $ TupleDef left right
 
 parseWhere :: Parser Closure
 parseWhere = pure []
@@ -141,9 +163,6 @@ parseTuple = do
   e2 <- parseExpr
   char ')'
   pure $ Tuple e1 e2
-
-parseInfo :: Parser Command
-parseInfo = undefined
 
 parseExit :: Parser Command
 parseExit = Exit <$ string "exit"
