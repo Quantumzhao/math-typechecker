@@ -10,35 +10,34 @@ import Control.Monad.State
 import Interpreter.AST
 import System.IO
 import Data.Functor
+import Control.Monad.Except
 
 main :: IO ()
 main = do
-  (ret, env) <- loadFiles include initGraph
-  outputRes ret initGraph
+  Right (ret, env) <- loadFiles include initNodes
+  outputRes ret initNodes
   repl env
+  repl initNodes
 
-initGraph :: (Graph, Int)
-initGraph = ([], 0)
+initNodes = ([], 0)
 
-include :: [String]
 include = ["./examples/test.mathdef"]
 
-repl :: GraphI -> IO ()
+repl :: Environment -> IO ()
 repl env = do
   input <- getLine
-  let t@(res, env') = evalWithEnv env (parse input)
-  outputRes res env'
-  if res == Halt then return ()
-  else repl (updateEnv t)
+  case evalWithEnv env (parse input) of
+    Right (Halt, _) -> return ()
+    Right t@(res, env') -> outputRes res env' >> repl env'
+    Left msg -> putStrLn msg >> repl env
 
-outputRes :: ReturnType -> GraphI -> IO ()
-outputRes (Err msg) _ = putStrLn msg
+outputRes :: ReturnType -> Environment -> IO ()
 outputRes (Res n) env = printLns $ printExpr $ formatNode n (fst env)
 outputRes Halt _ = return ()
 
-updateEnv :: (ReturnType, GraphI) -> GraphI
-updateEnv (Res r, (ns, i)) = (r : ns, i)
-updateEnv (_, g) = g
+-- updateEnv :: (ReturnType, Environment) -> Environment
+-- updateEnv (Res r, (ns, i)) = (r : ns, i)
+-- updateEnv (_, g) = g
 
 -- >>> fst $ evalWithEnv ([], 0) (parse "A := Set A")
 -- Res (Class {tags = ["Set"], key = Exist {nameOf = "A", id = "0"}})
@@ -49,12 +48,15 @@ printLns (x : xs) = do
   printLns xs
 printLns [] = return ()
 
-load :: GraphI -> String -> (ReturnType, GraphI)
+load :: Environment -> String -> Either String (ReturnType, Environment)
 load env content =
   let inputs =  getParsedDefs content in
-  runState (evaluateMany (Definition <$> inputs)) env
+  runExcept $ runStateT (evaluateMany (Definition <$> inputs)) env
 
-loadFiles :: [String] -> GraphI -> IO (ReturnType, GraphI)
-loadFiles [] env = return (Halt, env)
+loadFiles :: [String] -> Environment -> IO (Either String (ReturnType, Environment))
+loadFiles [] env = return $ Right (Halt, env)
 loadFiles [x] env = (openFile x ReadMode >>= hGetContents) <&> load env
-loadFiles (x : xs) env = loadFiles [x] env >>= loadFiles xs . snd
+loadFiles (x : xs) env =
+  do
+    Right env' <- loadFiles [x] env
+    loadFiles xs (snd env')

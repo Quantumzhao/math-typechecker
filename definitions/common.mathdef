@@ -1,24 +1,26 @@
 Empty := finite Set
 
-intersect := (A', B') -> C' where
+intersect := Mapping (A', B') -> C' where
     A' := AnySet
     B' := AnySet
     C' := Intersection where
         Intersection isSubsetOf AnySet
-    A' ~ C' by isSubsetOf
-    B' ~ C' by isSubsetOf
+    claim: A' ~ C' by isSubsetOf
+    claim: B' ~ C' by isSubsetOf
 
-union := (A, B) -> C where
+union := Mapping (A, B) -> C where
     A' := AnySet
     B' := AnySet
     C' := AnySet
-    C' ~ A' by isSubsetOf
-    C' ~ B' by isSubsetOf
+    claim: C' ~ A' by isSubsetOf
+    claim: C' ~ B' by isSubsetOf
 
 Natural := finite Set
 
 Real := Set
 
-Natural ~ Real by isSubsetOf
+claim: Natural isSubsetOf Real
 
-add := Real * Real -> Real
+addR := Mapping (Real, Real) -> Real
+
+multR := Mapping (Real, Real) -> Real

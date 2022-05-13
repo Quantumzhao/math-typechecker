@@ -5,7 +5,7 @@ import Printer.FormatDef hiding (ForAll, Exist)
 import ContextState
 import Set
 
-formatNode :: Node -> Graph -> Expr
+formatNode :: Node -> Nodes -> Expr
 formatNode (Mapping domain range tags i) nodes = 
   let dWhere = toWhereExpr domain nodes in
   let rWhere = toWhereExpr range nodes in
@@ -60,5 +60,5 @@ mergeWheres :: [WhereExpr] -> WhereExpr
 mergeWheres [] = BlankWhere 
 mergeWheres (x : xs) = x 
 
-toWhereExpr :: Node -> Graph -> WhereExpr
+toWhereExpr :: Node -> Nodes -> WhereExpr
 toWhereExpr node graph = BlankWhere 

@@ -10,6 +10,7 @@ import Data.List (intersperse, intercalate)
 import ContextState
 import Node as N
 import Tags
+import Control.Monad.Except
 
 empty :: Node
 empty = Class [setLit] (Exist "Empty" "Empty")
@@ -34,7 +35,7 @@ anything = Class [] (Exist "Anything" "Anything")
 isSubsetOf :: Node -> Node -> PContext Node
 isSubsetOf a b = do
   id <- getNewId
-  let subsetRel = Relation a b orderedRel (Exist "subset" id)
+  let subsetRel = Relation a b orderedRel (Exist "isSubsetOf" id)
   return subsetRel
 
 {-| returns a relation actually -}
@@ -47,12 +48,12 @@ isIn x set = do
 getElement :: Node -> String -> PContext Node
 getElement set@(Class tags i) name = do
   newId <- getNewId
-  if set == empty then error "Set.getElement: empty set"
+  if set == empty then throwError "Set.getElement: empty set"
   else do
     let e = Object (Exist name newId)
     addNewStatementM (e `isIn` set)
     return e
-getElement _ _ = error "Set.getElement: not a set"
+getElement _ _ = throwError "Set.getElement: not a set"
 
 -- powersetFnDef :: Node
 -- powersetFnDef = 

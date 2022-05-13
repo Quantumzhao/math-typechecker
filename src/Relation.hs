@@ -17,7 +17,6 @@ subsetFnDef = Relation allSets allSets orderedRel (Exist "subset" "subset")
 
 subset :: Node -> String -> PContext Node
 subset a@(Class tags _) name = do
-  (nodes, idGen) <- get
   newId <- getNewId 
   let newNode = Class tags (Exist name newId)
   subsetRel <- newNode `isSubsetOf` a
@@ -47,19 +46,19 @@ isInB e set
     isIn' a b (Relation from to _ (Exist "isIn" _)) = a `isSameAs` from && b `isSameAs` to
     isIn' _ _ _ = False
 
-get'isIn'relation :: Graph -> Node
+get'isIn'relation :: Nodes -> Node
 get'isIn'relation nodes = 
   case findByName "isIn" nodes of
     Just n -> n
     Nothing -> error "get'isIn'relation: isIn hasn't been defined yet"
 
-get'subsetOf'relation :: Graph -> Node
+get'subsetOf'relation :: Nodes -> Node
 get'subsetOf'relation nodes =
   case findByName "subset" nodes of
     Just n -> n
     Nothing -> error "get'subsetOf'relation: subsetOf hasn't been defined yet"
 
-existRelation :: Node -> Graph -> Bool
+existRelation :: Node -> Nodes -> Bool
 existRelation (Relation a b tags (Exist name id)) nodes = 
   let f (Relation a' b' tags' (Exist name' id')) = a == a' &&
                                                     b == b' &&

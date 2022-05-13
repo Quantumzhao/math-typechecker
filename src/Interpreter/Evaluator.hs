@@ -9,10 +9,11 @@ import Printer.Format
 import Relation
 import Set
 import Interpreter.Parser
+import Control.Monad.Identity (Identity(runIdentity))
+import Control.Monad.Except (runExcept, runExceptT)
 
 data ReturnType
   = Res Node
-  | Err String
   | Halt
   deriving (Show, Eq)
 
@@ -40,8 +41,8 @@ submitEvalRes :: ReturnType -> PContext ()
 submitEvalRes (Res n) = void $ addNewNode n
 submitEvalRes _ = return ()
 
-evalWithEnv ::  GraphI -> Command -> (ReturnType, GraphI)
-evalWithEnv env com = runState (evaluate com) env
+evalWithEnv ::  Environment -> Command -> Either String (ReturnType, Environment)
+evalWithEnv env com = runExcept $ runStateT (evaluate com) env
 
 -- >>> evalWithEnv ([], 0) (parse "A := Set")
 -- (Res (Class {tags = ["Set"], key = Exist {nameOf = "A", id = "0"}}),([],1))
@@ -56,7 +57,15 @@ evalExpr (Apply1 (Symbol name) exp1) = do
   isValid <- liftM2 (||) (arg `isInB` domain f) (arg `isSubsetOfB` domain f)
   if isValid then return (range f)
   else error "evalExpr Apply1: arg is not in domain"
-evalExpr (Apply2 (Symbol name) exp1 exp2) = undefined
+evalExpr (Apply2 (Symbol name) exp1 exp2) = do
+  arg1 <- evalExpr exp1
+  arg2 <- evalExpr exp2
+  f' <- findByNameM' name
+  let f = case f' of
+        Mapping {} -> f'
+        _ -> error "evalExpr Aply1: f is not a function"
+  isValid <- undefined
+  undefined
 evalExpr (Relate (Symbol name) exp1 exp2) = error "cannot evaluate a relation"
 evalExpr (Tuple exp1 exp2) = do
   left <- evalExpr exp1

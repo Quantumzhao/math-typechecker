@@ -20,11 +20,14 @@ orderedRel = [reflexiveTag, transitiveTag, antisymmetricTag]
 
 eqClass = "equivalence"
 
-infixTag = "infix"
+infixTag = "_infix"
+
+atomTag = "_atom"
 
 classTags = [
     finiteTag,
-    countableTag
+    countableTag,
+    atomTag
   ]
 
 mappingTags = [
