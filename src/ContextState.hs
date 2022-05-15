@@ -1,5 +1,3 @@
-{-# LANGUAGE RankNTypes #-}
-{-# LANGUAGE FlexibleContexts #-}
 module ContextState where
 import Control.Monad.State
 import Control.Monad.Except
@@ -58,14 +56,10 @@ getRelations = filter match <$> getNodes where
   match Relation {} = True
   match _ = False
 
--- getNodes' :: Test [Node]
--- getNodes' = do
---   (nodes, _) <- get
---   return nodes
-
-
 getNewId :: PContext String
 getNewId = do
   (nodes, id) <- get
   put (nodes, id + 1)
   return $ show id
+
+  

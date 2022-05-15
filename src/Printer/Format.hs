@@ -4,29 +4,33 @@ import Node hiding (tags)
 import Printer.FormatDef hiding (ForAll, Exist)
 import ContextState
 import Set
+import Control.Monad.Except
 
-formatNode :: Node -> Nodes -> Expr
-formatNode (Mapping domain range tags i) nodes = 
-  let dWhere = toWhereExpr domain nodes in
-  let rWhere = toWhereExpr range nodes in
-  MappingExpr {
-    name = getName i,
+formatNode :: Node -> Nodes -> Except String Expr
+formatNode (Mapping domain range tags i) nodes = do
+  let dWhere = toWhereExpr domain nodes
+  let rWhere = toWhereExpr range nodes
+  name <- getName i
+  return MappingExpr {
+    name = name,
     tags = tags,
     left = nameOf $ key domain,
     right = nameOf $ key range,
     wheres = mergeWheres [dWhere, rWhere]
   }
-formatNode s@(Class tags i) nodes = 
-  SetExpr {
-    name = getName i,
+formatNode s@(Class tags i) nodes = do
+  name <- getName i
+  return SetExpr {
+    name = name,
     tags = tags,
     wheres = toWhereExpr s nodes
   } 
-formatNode t@(DirectProduct (left, right) i) nodes = 
-  let lWhere = toWhereExpr left nodes in
-  let rWhere = toWhereExpr right nodes in
-  TupleExpr {
-    name = getName i,
+formatNode t@(DirectProduct (left, right) i) nodes = do
+  let lWhere = toWhereExpr left nodes
+  let rWhere = toWhereExpr right nodes
+  name <- getName i
+  return TupleExpr {
+    name = name,
     first = nameOf $ key left,
     second = nameOf $ key right,
     wheres = mergeWheres [lWhere, rWhere]
@@ -34,15 +38,15 @@ formatNode t@(DirectProduct (left, right) i) nodes =
 formatNode o@(Object i) nodes = 
   let t = undefined in
   let whereExpr = toWhereExpr t nodes in
-  ObjectExpr {
+  return ObjectExpr {
     name = nameOf $ key o,
     set = nameOf $ key t,
     wheres = whereExpr
   }
-formatNode (Relation domain codomain tags i) nodes = 
+formatNode (Relation domain codomain tags i) nodes =
   let leftWhere = toWhereExpr domain nodes in
   let rightWhere = toWhereExpr codomain nodes in
-  RelExpr {
+  return RelExpr {
     left = nameOf $ key domain,
     right = nameOf $ key codomain,
     name = nameOf i,
@@ -51,9 +55,9 @@ formatNode (Relation domain codomain tags i) nodes =
   }
 formatNode (Alias n i) nodes = formatNode (trackAlias n) nodes
 
-getName :: Identifier -> String
-getName (Exist name id) = name
-getName ForAll = error "Format.getName: how did we get there?"
+getName :: Identifier -> Except String String
+getName (Exist name id) = return name
+getName ForAll = throwError "Format.getName: how did we get there?"
 
 -- for demo only
 mergeWheres :: [WhereExpr] -> WhereExpr

@@ -38,6 +38,7 @@ library
       Relation
       Set
       Tags
+      Util
   other-modules:
       Paths_math_typechecker
   hs-source-dirs:

@@ -10,7 +10,8 @@ import Relation
 import Set
 import Interpreter.Parser
 import Control.Monad.Identity (Identity(runIdentity))
-import Control.Monad.Except (runExcept, runExceptT)
+import Control.Monad.Except (runExcept, runExceptT, MonadError (throwError))
+import Mapping
 
 data ReturnType
   = Res Node
@@ -51,22 +52,23 @@ evalExpr :: MathExp -> PContext Node
 evalExpr (Apply1 (Symbol name) exp1) = do
   arg <- evalExpr exp1
   f' <- findByNameM' name
-  let f = case f' of
-        Mapping {} -> f'
-        _ -> error "evalExpr Aply1: f is not a function"
-  isValid <- liftM2 (||) (arg `isInB` domain f) (arg `isSubsetOfB` domain f)
-  if isValid then return (range f)
-  else error "evalExpr Apply1: arg is not in domain"
+  f <- case f' of
+        Mapping {} -> return f'
+        _ -> throwError "evalExpr Aply1: f is not a function"
+  -- isValid <- liftM2 (||) (arg `isInB` domain f) (arg `isSubsetOfB` domain f)
+  -- if isValid then return (range f)
+  -- else throwError "evalExpr Apply1: arg is not in domain"
+  applyArg f' arg
 evalExpr (Apply2 (Symbol name) exp1 exp2) = do
   arg1 <- evalExpr exp1
   arg2 <- evalExpr exp2
   f' <- findByNameM' name
-  let f = case f' of
-        Mapping {} -> f'
-        _ -> error "evalExpr Aply1: f is not a function"
+  f <- case f' of
+        Mapping {} -> return f'
+        _ -> throwError "evalExpr Aply1: f is not a function"
   isValid <- undefined
   undefined
-evalExpr (Relate (Symbol name) exp1 exp2) = error "cannot evaluate a relation"
+evalExpr (Relate (Symbol name) exp1 exp2) = throwError "cannot evaluate a relation"
 evalExpr (Tuple exp1 exp2) = do
   left <- evalExpr exp1
   right <- evalExpr exp2
@@ -136,7 +138,7 @@ findByNameM' :: String -> PContext Node
 findByNameM' name = do
   node <- findByNameM name
   case node of
-    Nothing -> error "findByNameM': node not defined"
+    Nothing -> throwError "findByNameM': node not defined"
     Just n -> return n
 
 -- findInClosure :: String -> Closure -> Maybe DefEntry
@@ -144,12 +146,3 @@ findByNameM' name = do
 --   | sym == name = Just x
 --   | otherwise = findInClosure name xs
 -- findInClosure name [] = Nothing
-
-applyArg :: Node -> Node -> PContext Node
-applyArg (Mapping domain range tags i) arg = do
-  isSubset <- arg `isSubsetOfB` domain
-  isIn <- arg `isInB` domain
-  if isSubset then return range
-  else if isIn then do undefined
-  else error "applyArg: arg is not related to domain"
-applyArg _ _ = error "applyArg: not a mapping"

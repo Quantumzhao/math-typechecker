@@ -29,6 +29,11 @@ data Node
     reference :: Node,
     key :: Identifier
   }
+  | ClaimOfRel {
+    from :: Node,
+    to :: Node,
+    relation :: Node
+  }
   deriving (Eq, Show)
 
 data Identifier

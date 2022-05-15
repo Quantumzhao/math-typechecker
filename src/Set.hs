@@ -3,10 +3,6 @@
 module Set where
 
 import Prelude as P
-import GHC.Natural
-import Control.Monad.State.Lazy
-import qualified Data.List as List
-import Data.List (intersperse, intercalate)
 import ContextState
 import Node as N
 import Tags
@@ -55,23 +51,6 @@ getElement set@(Class tags i) name = do
     return e
 getElement _ _ = throwError "Set.getElement: not a set"
 
--- powersetFnDef :: Node
--- powersetFnDef = 
---   let allSubsets = Class (App subsetFnDef universal) universal [] anonymous 0 in
---   Unary Definition universal (Set (Type allSubsets) []) []
-
--- powerset :: Node -> PContext Node
--- powerset set
---   | isSet set = do
---     nodes <- getNodes 
---     id <- getNewId 
---     application <-  set `applyR'ed` powersetFnDef
---     let newName = "P(" ++ name set ++ ")"
---     let newNode = Set (Type application) [] newName id
---     addNewStatement (set `isSubsetOf` newNode)
---     return newNode
---   | otherwise = error "powerset: not a set"
-
 -- applyR'ed :: Node -> Node -> PContext Node
 -- applyR'ed v binop@(Binary l r o ts name _) = do
 --   subset <- isSubsetOf' v l  
@@ -114,7 +93,7 @@ getConstraints c@Class {} = do
   let child = undefined
   rels <- getRelations
   undefined
-getConstraints _ = error "getConstraints: this only applies to sets"
+getConstraints _ = throwError "getConstraints: this only applies to sets"
 
 isSameAs :: Node -> Node -> Bool
 isSameAs a b = trackAlias a == trackAlias b

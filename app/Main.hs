@@ -32,7 +32,10 @@ repl env = do
     Left msg -> putStrLn msg >> repl env
 
 outputRes :: ReturnType -> Environment -> IO ()
-outputRes (Res n) env = printLns $ printExpr $ formatNode n (fst env)
+outputRes (Res n) env = do
+  case runExcept $ formatNode n (fst env) of
+    Right n -> printLns $ printExpr n
+    Left msg -> print msg
 outputRes Halt _ = return ()
 
 -- updateEnv :: (ReturnType, Environment) -> Environment
