@@ -17,13 +17,21 @@ In other words, $R$ holds for some $a\in A$, and some $b\in B$, but there is no 
 We can supply claims that a single $a\in A$ and $b\in B$ are related, i.e. $a\sim_R b$. The syntax is
 
 ```
-let a ~ b by R
+a ~ b by R
 ```
+
+Or the infix equivalent
+
+```
+a R b
+```
+
+---
 
 Or if we want to claim some $a$ and $b$ are related, given that $\forall a\in A'$, $\forall b\in B'$, $a\sim_R b$ or alternatively $A'\times B'\subseteq A\times B$: 
 
 ```
-let A' ~ B' by R
+A' ~ B' by R
 ```
 
 After supplying this evidence, the program will be assured to use these relations in type inference. 
