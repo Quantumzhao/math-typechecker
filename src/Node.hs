@@ -32,7 +32,8 @@ data Node
   | ClaimOfRel {
     from :: Node,
     to :: Node,
-    relation :: Node
+    relation :: Node,
+    key :: Identifier
   }
   deriving (Eq, Show)
 

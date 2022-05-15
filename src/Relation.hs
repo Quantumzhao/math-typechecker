@@ -1,4 +1,3 @@
-{-# LANGUAGE ScopedTypeVariables #-}
 module Relation where
 import Node
 import ContextState
@@ -33,46 +32,55 @@ isSubsetOfB a b = do
     Just _ -> return True
     Nothing -> return (a `isSameAs` b)
   where
-    isSubsetOf' a b (Relation from to _ (Exist "subset" _)) = a `isSameAs` from && b `isSameAs` to
+    isSubsetOf' a b (ClaimOfRel from to _ _) = a `isSameAs` from && b `isSameAs` to
     isSubsetOf' a b _ = False
 
 isInB :: Node -> Node -> PContext Bool
 isInB e set
   | isSet e && set == allSets = return True
   | otherwise = do
-  nodes <- getNodes
-  case findFirst (e `isIn'` set) nodes of
-    Just _ -> return True
-    Nothing -> return False
-  where
-    isIn' a b (Relation from to _ (Exist "isIn" _)) = a `isSameAs` from && b `isSameAs` to
-    isIn' _ _ _ = False
+    nodes <- getNodes
+    isInRel <- get'isIn'relation
+    return $ isJust $ findFirst (e `isIn'` set) nodes
+    where
+      isIn' a b (ClaimOfRel from to isInRel _) = a `isSameAs` from && b `isSameAs` to
+      isIn' _ _ _ = False
 
-get'isIn'relation :: Nodes -> Node
-get'isIn'relation nodes =
-  case findByName "isIn" nodes of
-    Just n -> n
-    Nothing -> error "get'isIn'relation: isIn hasn't been defined yet"
+get'isIn'relation :: PContext Node
+get'isIn'relation = getNodeByName "isIn"
 
-get'subsetOf'relation :: Nodes -> Node
-get'subsetOf'relation nodes =
-  case findByName "subset" nodes of
-    Just n -> n
-    Nothing -> error "get'subsetOf'relation: subsetOf hasn't been defined yet"
+get'subsetOf'relation :: PContext Node
+get'subsetOf'relation = getNodeByName "isSubsetOf"
 
 existClaim :: Node -> PContext Bool
-existClaim c@ClaimOfRel {} = do
-  let f c'@ClaimOfRel {} = c == c'
+existClaim (ClaimOfRel from to rel _) = do
+  let f (ClaimOfRel from' to' rel' _) = from == from' && to == to' && rel == rel'
       f _ = False
   isJust . findFirst f <$> getNodes
 existClaim _ = throwError "existRelation: not a claim of relation"
 
 -- use it as infix operator ?? `relatesTo` ?? `by` ??
-relatesTo = ClaimOfRel
+relatesTo :: Node -> Node -> Node -> Node
+relatesTo a b c = ClaimOfRel a b c ForAll
 by = Prelude.id
 
 -- gets all claims of relations which about this object
 getAllRelatedClaims :: Node -> PContext Nodes
 getAllRelatedClaims node = getNodes >>= filterM f where
-  f r@(ClaimOfRel domain codomain relation) = return $ node == domain || node == codomain
+  f r@(ClaimOfRel domain codomain relation id) = return $ node == domain || node == codomain
   f _ = return False
+
+addIsInRel :: PContext ()
+addIsInRel = do
+  id <- getNewId
+  u <- getUniverse
+  let ret = Relation u allSets [] (Exist "isIn" id)
+  addNewNode ret
+  return ()
+
+addIsSubsetRel :: PContext ()
+addIsSubsetRel = do
+  id <- getNewId
+  let ret = Relation allSets allSets orderedRel (Exist "isSubsetOf" id)
+  addNewNode ret
+  return ()

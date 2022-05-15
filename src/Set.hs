@@ -101,3 +101,15 @@ isSameAs a b = trackAlias a == trackAlias b
 trackAlias :: Node -> Node
 trackAlias (Alias ref _) = trackAlias ref
 trackAlias n = n
+
+addUniverse :: PContext Node
+addUniverse = Class [] . Exist "Universe" <$> getNewId
+
+addEmpty :: PContext Node
+addEmpty = Class [setLit] . Exist "Empty" <$> getNewId
+
+getUniverse :: PContext Node
+getUniverse = getNodeByName "Universe"
+
+getEmpty :: PContext Node
+getEmpty = getNodeByName "Empty"

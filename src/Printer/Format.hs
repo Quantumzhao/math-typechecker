@@ -5,9 +5,12 @@ import Printer.FormatDef hiding (ForAll, Exist)
 import ContextState
 import Set
 import Control.Monad.Except
+import Relation
+import Data.Maybe
 
-formatNode :: Node -> Nodes -> Except String Expr
-formatNode (Mapping domain range tags i) nodes = do
+formatNode :: Node -> PContext Expr
+formatNode (Mapping domain range tags i) = do
+  nodes <- getNodes
   let dWhere = toWhereExpr domain nodes
   let rWhere = toWhereExpr range nodes
   name <- getName i
@@ -18,14 +21,16 @@ formatNode (Mapping domain range tags i) nodes = do
     right = nameOf $ key range,
     wheres = mergeWheres [dWhere, rWhere]
   }
-formatNode s@(Class tags i) nodes = do
+formatNode s@(Class tags i) = do
+  nodes <- getNodes
   name <- getName i
   return SetExpr {
     name = name,
     tags = tags,
     wheres = toWhereExpr s nodes
-  } 
-formatNode t@(DirectProduct (left, right) i) nodes = do
+  }
+formatNode t@(DirectProduct (left, right) i) = do
+  nodes <- getNodes
   let lWhere = toWhereExpr left nodes
   let rWhere = toWhereExpr right nodes
   name <- getName i
@@ -35,17 +40,24 @@ formatNode t@(DirectProduct (left, right) i) nodes = do
     second = nameOf $ key right,
     wheres = mergeWheres [lWhere, rWhere]
   }
-formatNode o@(Object i) nodes = 
-  let t = undefined in
-  let whereExpr = toWhereExpr t nodes in
+formatNode o@(Object i) = do
+  res <- findFirstM criteria
+  u <- getUniverse
+  let t = fromMaybe u res
+  --let whereExpr = toWhereExpr t nodes in
   return ObjectExpr {
     name = nameOf $ key o,
     set = nameOf $ key t,
-    wheres = whereExpr
+    wheres = BlankWhere
   }
-formatNode (Relation domain codomain tags i) nodes =
-  let leftWhere = toWhereExpr domain nodes in
-  let rightWhere = toWhereExpr codomain nodes in
+  where criteria c@Class {} = do
+          isInRel <- get'isIn'relation
+          existClaim (o `relatesTo` c `by` isInRel)
+        criteria _ = return False
+formatNode (Relation domain codomain tags i) = do
+  nodes <- getNodes
+  let leftWhere = toWhereExpr domain nodes
+  let rightWhere = toWhereExpr codomain nodes
   return RelExpr {
     left = nameOf $ key domain,
     right = nameOf $ key codomain,
@@ -53,16 +65,17 @@ formatNode (Relation domain codomain tags i) nodes =
     tags = tags,
     wheres = mergeWheres [leftWhere, rightWhere]
   }
-formatNode (Alias n i) nodes = formatNode (trackAlias n) nodes
+formatNode (Alias n i) = formatNode (trackAlias n)
+formatNode ClaimOfRel {} = return ClaimExpr
 
-getName :: Identifier -> Except String String
+getName :: Identifier -> PContext String
 getName (Exist name id) = return name
 getName ForAll = throwError "Format.getName: how did we get there?"
 
 -- for demo only
 mergeWheres :: [WhereExpr] -> WhereExpr
-mergeWheres [] = BlankWhere 
-mergeWheres (x : xs) = x 
+mergeWheres [] = BlankWhere
+mergeWheres (x : xs) = x
 
 toWhereExpr :: Node -> Nodes -> WhereExpr
-toWhereExpr node graph = BlankWhere 
+toWhereExpr node graph = BlankWhere

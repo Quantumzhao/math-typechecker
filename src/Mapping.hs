@@ -49,4 +49,3 @@ applyArg (Mapping domain range tags i) arg = do
     return o
   else throwError "applyArg: arg is not related to domain"
 applyArg _ _ = throwError "applyArg: not a mapping"
-

@@ -23,27 +23,38 @@ evaluate com =
   case com of
     Definition def -> do
       res <- evalDefinition def False
+      addNewNode res
       return $ Res res
     Exit -> return Halt
     AnonymousExpr expr -> do
       res <- evalExpr expr
       return $ Res res
+    ClaimOf c -> do
+      res <- evalClaim c
+      addNewNode res
+      return $ Res res
 
 {-| also puts the result into the graph -}
 evaluateMany :: [Command] -> PContext ReturnType
 evaluateMany [] = return Halt
-evaluateMany [x] = do
-  x' <- evaluate x
-  submitEvalRes x'
-  return x'
-evaluateMany (x : xs) = evaluate x >>= submitEvalRes >> evaluateMany xs
+evaluateMany (x : xs) = do
+  res <- evaluate x
+  -- submitEvalRes res
+  evaluateMany xs
 
-submitEvalRes :: ReturnType -> PContext ()
-submitEvalRes (Res n) = void $ addNewNode n
-submitEvalRes _ = return ()
+-- submitEvalRes :: ReturnType -> PContext ()
+-- submitEvalRes (Res n) = void $ addNewNode n
+-- submitEvalRes _ = return ()
 
 evalWithEnv ::  Environment -> Command -> Either String (ReturnType, Environment)
 evalWithEnv env com = runExcept $ runStateT (evaluate com) env
+
+updateState :: Context -> Environment -> Either String Environment
+updateState stateTrans env = 
+  case runExcept $ runStateT stateTrans env of
+    Left msg -> Left msg
+    Right (_, env') -> Right env'
+    
 
 -- >>> evalWithEnv ([], 0) (parse "A := Set")
 -- (Res (Class {tags = ["Set"], key = Exist {nameOf = "A", id = "0"}}),([],1))
@@ -54,7 +65,7 @@ evalExpr (Apply1 (Symbol name) exp1) = do
   f' <- findByNameM' name
   f <- case f' of
         Mapping {} -> return f'
-        _ -> throwError "evalExpr Aply1: f is not a function"
+        _ -> throwError "evalExpr Apply1: f is not a function"
   -- isValid <- liftM2 (||) (arg `isInB` domain f) (arg `isSubsetOfB` domain f)
   -- if isValid then return (range f)
   -- else throwError "evalExpr Apply1: arg is not in domain"
@@ -124,6 +135,19 @@ evalMathDef (FromExpr s) key = do
   n <- evalExpr s
   return $ Alias n key
 
+evalClaim :: Claim -> PContext Node
+evalClaim (Claim from to rel) = do
+  f <- evalExpr from
+  t <- evalExpr to
+  r <- evalExpr rel
+  id <- getNewId
+  return $ ClaimOfRel {
+    from = f,
+    to = t,
+    Node.relation = r,
+    key = Exist id id
+  }
+
 -- add closure to the environment
 -- and then return the closure
 evalClosure :: Closure -> PContext [Node]
@@ -138,7 +162,7 @@ findByNameM' :: String -> PContext Node
 findByNameM' name = do
   node <- findByNameM name
   case node of
-    Nothing -> throwError "findByNameM': node not defined"
+    Nothing -> throwError $ "findByNameM': " ++ name ++ " not defined"
     Just n -> return n
 
 -- findInClosure :: String -> Closure -> Maybe DefEntry

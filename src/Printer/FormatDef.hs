@@ -34,6 +34,7 @@ data Expr
     second :: String,
     wheres :: WhereExpr
   }
+  | ClaimExpr
 
 data QualifierExpr 
   = BlankQualifier

@@ -27,6 +27,8 @@ printExpr (ObjectExpr name set wheres) = (name ++ " is element in " ++ set) `com
 
 printExpr (TupleExpr name l r wheres) = (name ++ " is (" ++ l ++ ", " ++ r ++ ")") `combineWith` wheres
 
+printExpr ClaimExpr = ["Done. "]
+
 printWhereExpr :: WhereExpr -> [String]
 printWhereExpr (Clause exprs) = " where" : printWhereExpr' exprs
   where

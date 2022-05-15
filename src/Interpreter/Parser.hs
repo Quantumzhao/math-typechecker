@@ -17,11 +17,11 @@ type Parser = Parsec Void String
 -- Couldn't match expected type ‘[Char] -> t’
 --             with actual type ‘ParsecT Void String Identity Command’
 
--- >>> runParser parseDef "" "A := finite Set"
--- Right (Definition (DefEntry {symbol = "A", defBody = FromClassAST (ClassDef {tagsC = ["finite","Set"]}), wheres = []}))
+-- >>> runParser mainParse "" "claim: A isSubsetOf A"
+-- Right (ClaimOf (Claim {fromC = Variable (Symbol {reference = "A"}), toC = Variable (Symbol {reference = "A"}), relation = Variable (Symbol {reference = "isSubsetOf"})}))
 
--- >>> runParser parseMapDef "" "injective Mapping A -> B"
--- Right (FromMappingAST (MappingDef {domainM = Symbol {reference = "A"}, rangeM = Symbol {reference = "B"}, tagsM = ["injective"]}))
+-- >>> runParser parseClaim "" "claim: A ~ B by isSubsetOf"
+-- Right (ClaimOf (Claim {fromC = Variable (Symbol {reference = "A"}), toC = Variable (Symbol {reference = "B"}), relation = Variable (Symbol {reference = "isSubsetOf"})}))
 
 labelChars :: Parser Char
 labelChars = satisfy $ \ c -> isAlphaNum c || c `elem` ['_', '-', '\'']
@@ -36,23 +36,25 @@ sb :: Parser a -> Parser b -> Parser c -> Parser c
 sb p1 p2 p = space *> p1 *> space *> p <* space <* p2
 
 parse :: String -> Command
-parse s = case runParser main "" s of
+parse s = case runParser mainParse "" s of
   Right r -> r
   Left l -> error $ show l
-  where 
-    main = choice [
-        try parseExit,
-        try parseDef, 
-        try expr2Command
-      ]
+
+mainParse :: Parser Command
+mainParse = choice [
+    parseClaim,
+    try parseExit,
+    try parseDef, 
+    try expr2Command
+  ]
 
 parseDef :: Parser Command
 parseDef = Definition <$> parseDefEntry
 
-getParsedDefs :: String -> [DefEntry]
-getParsedDefs contents = 
+getAllParsed :: String -> [Command]
+getAllParsed contents = 
   let main = do
-            ds <- some parseDefEntry
+            ds <- some mainParse
             optional anySingle
             pure ds
   in
@@ -87,8 +89,8 @@ parseMapDef = do
   tags <- many (parseValidTags mappingTags) <* string "Mapping "
   domain <- parseExpr
   string " -> "
-  -- error $ show domain
   range <- parseExpr
+  optional space
   pure $ FromMappingAST $ MappingDef domain range tags
 
 parseClassDef :: Parser MathDef
@@ -105,10 +107,11 @@ parseRelDef = do
   from <- parseExpr
   string " and "
   to <- parseExpr
+  optional space
   pure $ FromRelationAST $ RelDef from to tags
 
 parseObjDef :: Parser MathDef
-parseObjDef = string "element in " *> (FromObjectAST . ObjectDef <$> parseExpr)
+parseObjDef = string "element in " *> (FromObjectAST . ObjectDef <$> parseExpr) <* optional space
 
 parseTupleDef :: Parser MathDef
 parseTupleDef = do
@@ -118,6 +121,31 @@ parseTupleDef = do
   right <- parseExpr
   char ')'
   pure $ FromTupleAST $ TupleDef left right
+
+parseClaim :: Parser Command
+parseClaim = ClaimOf <$> (try parseClaimTilde <|> try parseClaimInfix)
+
+parseClaimTilde :: Parser Claim
+parseClaimTilde = do
+  string "claim: "
+  left <- parseExpr
+  string " ~ "
+  right <- parseExpr
+  string " by "
+  rel <- parseExpr
+  let res = Claim left right rel
+  pure res
+
+parseClaimInfix :: Parser Claim
+parseClaimInfix = do
+  string "claim: "
+  left <- parseExpr
+  char ' '
+  rel <- parseExpr
+  char ' '
+  right <- parseExpr
+  let res = Claim left right rel
+  pure res
 
 parseWhere :: Parser Closure
 parseWhere = pure []
@@ -130,12 +158,6 @@ parseExpr = try parseApply2 <|> try parseApply1 <|> try parseTuple <|> try (Vari
 
 parseSymbol :: Parser Symbol
 parseSymbol = Symbol <$> some labelChars
-
--- no leading space, one or more trailing space
--- parseTags :: Parser [String]
--- parseTags =
---   let validTag = some (satisfy (\ (c :: Char) -> not False)) in
---   many (some labelChars <* space)
 
 parseApply1 :: Parser MathExp
 parseApply1 = do

@@ -7,6 +7,7 @@ module Interpreter.AST where
 data Command
   -- defining a structure
   = Definition DefEntry
+  | ClaimOf Claim
   | AnonymousExpr MathExp
   -- meet its inevitable demise
   | Exit
@@ -61,6 +62,12 @@ data Tuple = TupleDef {
 
 data Symbol = Symbol {
   reference :: String
+} deriving (Show)
+
+data Claim = Claim {
+  fromC :: MathExp,
+  toC :: MathExp,
+  relation :: MathExp
 } deriving (Show)
 
 type Closure = [(Bool, DefEntry)]

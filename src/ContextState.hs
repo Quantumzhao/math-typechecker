@@ -40,6 +40,14 @@ findFirst f (x : xs) =
   else findFirst f xs
 findFirst f [] = Nothing
 
+findFirstM :: (Node -> PContext Bool) -> PContext (Maybe Node)
+findFirstM f = do
+  ns <- getNodes
+  res <- filterM f ns
+  return $ case res of
+    [] -> Nothing
+    (x : _) -> Just x
+
 findByName :: String -> Nodes -> Maybe Node
 findByName name = findFirst (\ n -> nameOf (key n) == name)
 
@@ -62,4 +70,9 @@ getNewId = do
   put (nodes, id + 1)
   return $ show id
 
-  
+getNodeByName :: String -> PContext Node
+getNodeByName name = do
+  res <- findByNameM name
+  case res of
+    Nothing -> throwError $ name ++ " not found"
+    Just sth -> return sth
