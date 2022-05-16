@@ -1,0 +1,9 @@
+add1 := Mapping Natural -> Natural
+claim: add1 isIn Functions
+
+multiple := Relation between Natural and Natural
+
+1 := element in Natural
+4 := element in Natural
+
+claim: 1 ~ 4 by multiple

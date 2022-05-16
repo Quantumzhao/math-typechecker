@@ -13,7 +13,8 @@ import Set ( addEmpty, addUniverse )
 
 main :: IO ()
 main = do
-  contents <- loadFiles include
+  paths <- getDeps
+  contents <- loadFiles paths
   -- first load in the hard coded relations (that are hard to define using this DSL)
   -- then the basic definitions from external files
   case updateState (initNodes >> loadMany contents) initialState of
@@ -22,7 +23,7 @@ main = do
 
 initialState = ([], 0)
 
-include = ["./examples/test.mathdef"]
+configPath = "./app/deps.cfg"
 
 -- the main loop
 repl :: Environment -> IO ()
@@ -85,3 +86,8 @@ loadFiles (x : xs) = do
   x' <- openFile x ReadMode >>= hGetContents
   xs' <- loadFiles xs
   return $ x' : xs'
+
+getDeps :: IO [String]
+getDeps = do
+  content <- openFile configPath ReadMode >>= hGetContents
+  return $ lines content

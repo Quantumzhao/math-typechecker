@@ -37,7 +37,7 @@ type Parser = Parsec Void String
 
 -- all valid characters that can appear in a label
 labelChars :: Parser Char
-labelChars = satisfy $ \ c -> isAlphaNum c || c `elem` ['_', '-', '\'']
+labelChars = satisfy $ \ c -> isAlphaNum c || c `elem` ['_', '-', '\'', '.']
 
 parseValidTags :: [String] -> Parser String
 parseValidTags tags = choice (string <$> tags) <* space
