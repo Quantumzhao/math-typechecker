@@ -7,21 +7,3 @@ f := injective Mapping A -> B
 R := Relation between A and B
 
 claim: B isSubsetOf A
-
-Natural := finite Set
-
-Real := Set
-
-claim: Natural isSubsetOf Real
-
-addR := Mapping (Real, Real) -> Real
-
-multR := Mapping (Real, Real) -> Real
-
-r := element in Real
-
-a := element in A
-
-Functions := Set
-
-compose := Mapping (Functions, Functions) -> Functions

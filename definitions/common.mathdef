@@ -1,4 +1,4 @@
-Natural := finite Set
+Natural := countable Set
 
 Real := Set
 

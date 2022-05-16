@@ -5,6 +5,7 @@ import ContextState ( PContext, addNewNode, getNewId )
 import Relation ( isIn, isInB, isSubsetOfB )
 import Control.Monad.Except ( MonadError(throwError) )
 import Util ( toLower )
+import Set (isSameAs)
 
 -- short for cross
 (<.>) :: Node -> Node -> PContext Node
@@ -25,7 +26,7 @@ applyArg (Mapping domain range tags i) arg = do
   isSubset <- arg `isSubsetOfB` domain
   -- check if the argument is in domain
   isInFlag <- arg `isInB` domain
-  if isSubset then return range
+  if isSubset || (arg `isSameAs` domain) then return range
   -- if it is an element, then create the corresponding element in the image
   else if isInFlag then do
     id <- getNewId

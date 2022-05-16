@@ -1,93 +1,177 @@
-# CMSC488B Project Proposal
+# Math Type Checker
 
-## 1. Overall goal
+## Build
 
-This program will visualize the user defined objects such as sets, groups and their derivatives, as well as providing quick summaries similar to type annotations in Haskell or OCaml. Users can provide such custom definitions via a file written in a DSL or interact with the program CLI. The “types” will be similar to dependent types, but with more subtle features.  
-
-## 2. Use case
-
-When I was studying MATH402 which is Algebraic Structures, I was very much confused by the various concepts and constructs that are densely intertwined together. I wished that I could have some sort of programs/calculators to help me figure out the “type” of objects (i.e. group of elements, group of subgroup and cosets, group of symmetry …). This interactive program could possibly offer a visualization or “type” annotation. 
-
-A crude example: 
-
-Type in:
+`cd` to project directory, and then
 
 ```
->>> G := Group Z4 +
+stack build
 ```
 
-> $G$ is the group of integer mod 4 over addition. 
+>  If there is any error related to the version of GHC, try the following:
+>
+> 1. open `stack.yaml`
+> 2. change `resolver: [something]` to `resolver: lts-18.6`
+> 3. and try again 
 
-The output is:
+## Run
 
-```
-G: abelian Group a + where 
-	a: [n]_(mod 4) where
-		n in [0, 3]
-```
-
-> `a: [0]_(mod 4) ... [3]_(mod 4)` means $a$ represents (I don’t know the correct word choice for it. Type? Class? Kind? Category?) the equivalence classes $[0]_\text{mod 4}$, $[1]_\text{mod 4}$, $[2]_\text{mod 4}$ and $[3]_\text{mod 4}$. Because $+$ is a pre-defined associative and commutative operator, it is inferred that this group is abelian. 
-
-Then:
+Inside the project directory, run
 
 ```
->>> f := V -> G where -> is bijective
+stack run
 ```
 
-> $f$ is the bijective map from Klein-4 group to $G$
+If everything goes well, there should be a message
 
-The output is:
+> Successfully loaded all definitions
+
+An then you can interact with the CLI. A more detailed documentation on the syntax and supported constructs is in the file `language.md`
+
+### Some Other options
+
+#### Configuration and Dependency
+
+There is one particular file that is worth noticing: `./app/deps.cfg`. It is the list of definition files that will be loaded into the environment upon program initialization. 
+
+By default, the program loads in these files in order:
+
+- `./definitions/common.mathdef`
+- `./examples/numbers.mathdef`
+
+> Moving or renaming this file can result in unexpected behavior. (Also it might not work as expected on Windows)
+
+Here is the specification:
+
+1. The paths in the file will be scanned sequentially from top to bottom, which means the first line will be loaded first. Wrong initialization order can result in dependency errors. 
+2. No newlines between the entries
+3. You can add or remove paths as you wish, as long as they are valid files. 
+
+#### User Defined files
+
+By convention, `common.mathdef` is located in `./definitions`. You are free to move this file around, but it is not recommended to do so. 
+
+You can add your own definition files to 
+
+- `./definitions` if it is part of the definitions of common mathematical structures
+
+- `./examples` if it is something you want to try out but it’s too tedious to type in in the CLI
+
+For example, if you want to test `test.mathdef`, just append its path after the existing lines in `deps.cfg`, and the file will look like this:
 
 ```
-f: V -> abelian Group a + where 
-	a: [n]_(mod 4) where
-		n in [0, 3]
-    -> is bijective
+./definitions/common.mathdef
+./examples/numbers.mathdef
+./examples/test.mathdef
 ```
 
-> The program won’t throw any error even if there does not exist such a mapping. It only checks for “type” and assumes the user inputs are correct. 
+## Examples
 
-Then:
+> For this section, everything after `>>>` is the user input and the following line is the program output
 
-```
->>> f^(-1)(G)
-```
+1. ```haskell
+   >>> Natural
+   Natural is countable Set Natural
+   ```
 
-> The program will also generate a definition of the inverse  for bijective relations, due to the nature of bijectivity. 
+2. ```haskell
+   >>> 1 := element in Natural
+   1 is element in Natural
+   ```
 
-The output is:
+3. ```haskell
+   >>> add1(1)
+   natural is element in Natural
+   ```
 
-```
-V
-```
+   > How to understand this?
+   >
+   > If the input is an expression, the program output is always the value that it returns. In this case, the returned value is an object in $\N$ which has not been defined by the user yet. 
+   >
+   > So the program assigned it with the name *natural*
 
-> $f^{-1}$ can also work on elements of a group
+4. ```haskell
+   >>> add1
+   add1 is Natural -> Natural
+   ```
 
-## 3. Project architecture
+5. ```haskell
+   >>> add1(Natural)
+   Natural is countable Set Natural
+   ```
 
-This program can be roughly divided into the following components:
+6. ```
+   >>> 1.1 := element in Real
+   1.1 is element in Real
+   ```
 
-1. **Lexer**: The program will need to come with a DSL. 
-2. **Parser**: Convert the tokens to an AST. 
-3. **Evaluator**: Infer the “type” of the given expression. This might require monad transformers. 
-4. **Standard library**: Textbook definitions will be selectively chosen and stored in this module. 
-5. **“Type” inference algorithm**: Because these mathematical notations are quite different from the typical types in type theory, this part would not be a trivial task. 
-6. **“Type” system**: Same as above, but these are the definitions for the data structures holding the “types”. 
+7. ```haskell
+   >>> addR(1.1, 1.1)
+   real is element in Real
+   ```
 
-## 4. Testing
+8. ```haskell
+   >>> add1(1.1)
+   applyArg: arg is not related to domain
+   ```
 
-This project is relatively easy to test. The `quickcheck` properties can solely consist of definitions from a textbook. 
+   > How to understand this?
+   >
+   > This is an error message (although not necessarily the most informative) meaning that $1.1\in\R$ does not imply $1.1\in\N$ because there is no claim of relation, such that $\R\subseteq \N$ (and in fact as we all know, $\R\nsubseteq\N$)
 
-The generators on the other hand, would be tricky to implement. The relations between algebraic structures should not be generated randomly as they usually embody implications. In order to automatically verify and filter out invalid relations, I would certainly need a auto theorem proving algorithm which is impractical to design given the time constraint. Thus I would probably manually populate the candidate/example pool. 
+9. ```
+   >>> A := Set
+   ...
+   >>> B := Set
+   ...
+   >>> f := Mapping A -> B
+   ...
+   >>> f(A)
+   B is Set B
+   >>> f(B)
+   applyArg: arg is not related to domain
+   ```
 
-For example, 
+   Normal stuff so far. What if we specify $B\subseteq A$?
 
-1. One simple property: 
+   ```haskell
+   >>> claim: B isSubsetOf A
+   Done.
+   >>> f(B)
+   B is finite Set B
+   ```
 
-   > If $A$ and $B$ are sets, then their cartesian product can be denoted by $A\times B$
+   It can now recognize this expression. 
 
-   `quickcheck` should be able to read results from standard output and then compare the literal strings to the textbook definition in the program DSL’s notation. 
+   > Note: `isSubsetOf` is a predefined relation. 
+   >
+   > If you want to define your own relation, refer to this example: 
+   >
+   > ```
+   > >>> multiple := Relation between Natural and Natural
+   > ```
+   >
+   > However, it is pretty much useless right now because I haven’t got enough time to fully implement other related stuff (poset/lattice/equivalence relation/…)
 
-2. Checking the types of user defined objects
+10. ```haskell
+    >>> claim: addR isIn Functions
+    >>> compose(addR, addR)
+    functions is element in Functions
+    ```
 
-   This should be straight forward as well, as I am able to give expected “types” by myself and then allow the `quickcheck` to compare with the actual result. The “types” are either equal or not equal, which makes it extremely easy to assert. 
+    > Again, not a great name, but it works
+
+11. ```haskell
+    >>> 1 := element in Natural
+    ...
+    >>> 4 := element in Natural
+    ...
+    >>> claim: 1 ~ 4 by multiple
+    Done.
+    ```
+
+    > You can also use the tilde notation (which is more formal, but less readable)
+
+## Other
+
+I wish my project could be hosted on class homepage
