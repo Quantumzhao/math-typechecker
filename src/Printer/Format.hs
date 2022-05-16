@@ -41,7 +41,9 @@ formatNode t@(DirectProduct (left, right) i) = do
     wheres = mergeWheres [lWhere, rWhere]
   }
 formatNode o@(Object i) = do
-  res <- findFirstM criteria
+  isInRel <- get'isIn'relation
+  nodes <- getNodes
+  res <- findFirstM (criteria isInRel)
   u <- getUniverse
   let t = fromMaybe u res
   --let whereExpr = toWhereExpr t nodes in
@@ -50,10 +52,9 @@ formatNode o@(Object i) = do
     set = nameOf $ key t,
     wheres = BlankWhere
   }
-  where criteria c@Class {} = do
-          isInRel <- get'isIn'relation
+  where criteria isInRel c@Class {} = do
           existClaim (o `relatesTo` c `by` isInRel)
-        criteria _ = return False
+        criteria _ _ = return False
 formatNode (Relation domain codomain tags i) = do
   nodes <- getNodes
   let leftWhere = toWhereExpr domain nodes

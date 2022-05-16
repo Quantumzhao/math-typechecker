@@ -21,30 +21,51 @@ subset a@(Class tags _) name = do
   newId <- getNewId
   let newNode = Class tags (Exist name newId)
   subsetRel <- newNode `isSubsetOf` a
-  addNewStatement subsetRel
+  addNewNode subsetRel
   return newNode
 subset _ _ = throwError "Set.subset: not a set"
 
+{-| returns a claim actually -}
+isSubsetOf :: Node -> Node -> PContext Node
+isSubsetOf a b = do
+  rel <- get'subsetOf'relation
+  let subsetRel = a `relatesTo` b `by` rel
+  return subsetRel
+
 isSubsetOfB :: Node -> Node -> PContext Bool
+isSubsetOfB (DirectProduct (l, r) _) (DirectProduct (l', r') _) = do
+  liftM2 (&&) (l `isSubsetOfB` l') (r `isSubsetOfB` r')
 isSubsetOfB a b = do
-  graph <- getNodes
-  case findFirst (a `isSubsetOf'` b) graph of
-    Just _ -> return True
-    Nothing -> return (a `isSameAs` b)
-  where
-    isSubsetOf' a b (ClaimOfRel from to _ _) = a `isSameAs` from && b `isSameAs` to
-    isSubsetOf' a b _ = False
+  -- graph <- getNodes
+  isSubsetRel <- get'subsetOf'relation
+  existClaim (a `relatesTo` b `by` isSubsetRel)
+  -- case findFirst (isSubsetOf' isSubsetRel a b) graph of
+  --   Just _ -> return True
+  --   Nothing -> return (a `isSameAs` b)
+  -- where
+  --   isSubsetOf' a b r (ClaimOfRel from to rel _) = a `isSameAs` from && b `isSameAs` to && r == rel
+  --   isSubsetOf' _ _ _ _ = False
 
 isInB :: Node -> Node -> PContext Bool
+isInB (DirectProduct (l, r) _) (DirectProduct (l', r') _) = 
+  liftM2 (&&) (l `isInB` l') (r `isInB` r')
 isInB e set
   | isSet e && set == allSets = return True
   | otherwise = do
-    nodes <- getNodes
     isInRel <- get'isIn'relation
-    return $ isJust $ findFirst (e `isIn'` set) nodes
-    where
-      isIn' a b (ClaimOfRel from to isInRel _) = a `isSameAs` from && b `isSameAs` to
-      isIn' _ _ _ = False
+    existClaim (e `relatesTo` set `by` isInRel)
+    -- nodes <- getNodes
+    -- return $ isJust $ findFirst (isIn' isInRel e set) nodes
+    -- where
+    --   isIn' a b r (ClaimOfRel from to rel _) = a `isSameAs` from && b `isSameAs` to && r == rel
+    --   isIn' _ _ _ _ = False
+
+{-| returns a claim actually -}
+isIn :: Node -> Node -> PContext Node
+isIn x set = do
+  rel <- get'isIn'relation
+  let subsetRel = x `relatesTo` set `by` rel
+  return subsetRel
 
 get'isIn'relation :: PContext Node
 get'isIn'relation = getNodeByName "isIn"
@@ -53,15 +74,15 @@ get'subsetOf'relation :: PContext Node
 get'subsetOf'relation = getNodeByName "isSubsetOf"
 
 existClaim :: Node -> PContext Bool
-existClaim (ClaimOfRel from to rel _) = do
-  let f (ClaimOfRel from' to' rel' _) = from == from' && to == to' && rel == rel'
+existClaim (ClaimOfRel from to rel _) =
+  let f (ClaimOfRel from' to' rel' _) = from `isSameAs` from' && to `isSameAs` to' && rel == rel'
       f _ = False
-  isJust . findFirst f <$> getNodes
+  in isJust . findFirst f <$> getNodes
 existClaim _ = throwError "existRelation: not a claim of relation"
 
 -- use it as infix operator ?? `relatesTo` ?? `by` ??
 relatesTo :: Node -> Node -> Node -> Node
-relatesTo a b c = ClaimOfRel a b c ForAll
+relatesTo a b c = ClaimOfRel a b c (Exist "String" "String")
 by = Prelude.id
 
 -- gets all claims of relations which about this object

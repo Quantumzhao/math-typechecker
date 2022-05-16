@@ -27,29 +27,15 @@ anyClass = Class [] (Exist "AnyClass" "AnyClass")
 anything :: Node
 anything = Class [] (Exist "Anything" "Anything")
 
-{-| returns a relation actually -}
-isSubsetOf :: Node -> Node -> PContext Node
-isSubsetOf a b = do
-  id <- getNewId
-  let subsetRel = Relation a b orderedRel (Exist "isSubsetOf" id)
-  return subsetRel
-
-{-| returns a relation actually -}
-isIn :: Node -> Node -> PContext Node
-isIn x set = do
-  id <- getNewId
-  let isInRel = Relation x set [] (Exist "isIn" id)
-  return isInRel
-
-getElement :: Node -> String -> PContext Node
-getElement set@(Class tags i) name = do
-  newId <- getNewId
-  if set == empty then throwError "Set.getElement: empty set"
-  else do
-    let e = Object (Exist name newId)
-    addNewStatementM (e `isIn` set)
-    return e
-getElement _ _ = throwError "Set.getElement: not a set"
+-- getElement :: Node -> String -> PContext Node
+-- getElement set@(Class tags i) name = do
+--   newId <- getNewId
+--   if set == empty then throwError "Set.getElement: empty set"
+--   else do
+--     let e = Object (Exist name newId)
+--     addNewStatementM (e `isIn` set)
+--     return e
+-- getElement _ _ = throwError "Set.getElement: not a set"
 
 -- applyR'ed :: Node -> Node -> PContext Node
 -- applyR'ed v binop@(Binary l r o ts name _) = do
@@ -102,11 +88,17 @@ trackAlias :: Node -> Node
 trackAlias (Alias ref _) = trackAlias ref
 trackAlias n = n
 
-addUniverse :: PContext Node
-addUniverse = Class [] . Exist "Universe" <$> getNewId
+addUniverse :: PContext ()
+addUniverse = do
+  id <- getNewId
+  let res = Class [] (Exist "Universe" id)
+  addNewNode res
 
-addEmpty :: PContext Node
-addEmpty = Class [setLit] . Exist "Empty" <$> getNewId
+addEmpty :: PContext ()
+addEmpty = do 
+  id <- getNewId
+  let res = Class [setLit] (Exist "Empty" id)
+  addNewNode res
 
 getUniverse :: PContext Node
 getUniverse = getNodeByName "Universe"

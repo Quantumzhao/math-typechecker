@@ -77,15 +77,17 @@ evalExpr (Apply2 (Symbol name) exp1 exp2) = do
   f <- case f' of
         Mapping {} -> return f'
         _ -> throwError "evalExpr Aply1: f is not a function"
-  isValid <- undefined
-  undefined
+  tup <- arg1 <.> arg2
+  --isValid <- liftM2 (||) (arg1 `isSubsetOfB` ()) (arg2 `isSubsetOfB` exp2)
+  applyArg f tup
 evalExpr (Relate (Symbol name) exp1 exp2) = throwError "cannot evaluate a relation"
 evalExpr (Tuple exp1 exp2) = do
   left <- evalExpr exp1
   right <- evalExpr exp2
   id <- getNewId
-  let res = DirectProduct (left, right) (Exist (show left ++ show right) id)
+  let res = DirectProduct (left, right) (Exist (tupleNotation (nameOf $ key left) (nameOf $ key right)) id)
   return res
+  where tupleNotation l r = "(" ++ l ++ ", " ++ r ++ ")"
 evalExpr (Variable (Symbol name)) = findByNameM' name
 
 evalDefinition :: DefEntry -> Bool -> PContext Node
@@ -123,8 +125,11 @@ evalMathDef (FromRelationAST (RelDef from to tags)) key = do
   return res
 evalMathDef (FromObjectAST (ObjectDef set)) key = do
   set' <- evalExpr set
+  -- error $ show set'
   let res = Object key
-  addNewStatementM (res `isIn` set')
+  claim <- res `isIn` set'
+  addNewNode claim
+  -- error $ show claim
   return res
 evalMathDef (FromTupleAST (TupleDef left right)) key = do
   left' <- evalExpr left

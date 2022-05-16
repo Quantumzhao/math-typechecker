@@ -12,33 +12,37 @@ import Data.Functor
 import Control.Monad.Except
 import Interpreter.Evaluator
 import Relation
+import Set
 
 main :: IO ()
 main = do
   contents <- loadFiles include
-  case updateState (initRelations >> loadMany contents) initNodes of
-    Left msg -> print msg >> putStrLn "Program Halt. "
+  case updateState (initNodes >> loadMany contents) initialState of
+    Left msg -> putStrLn msg >> putStrLn "Program Halt. "
     Right env' -> putStrLn "Successfully loaded all definitions" >> repl env'
   -- Right (ret, env) <- loadFiles include initNodes
   -- outputRes ret initNodes
   -- repl env
 
-initNodes = ([], 0)
+initialState = ([], 0)
 
 include = ["./examples/test.mathdef"]
 
 repl :: Environment -> IO ()
 repl env = do
   input <- getLine
-  case evalWithEnv env (parse input) of
-    Right (Halt, _) -> return ()
-    Right t@(res, env') -> outputRes res env' >> repl env'
-    Left msg -> putStrLn msg >> repl env
+  case parse input of
+    Left msg -> void $ print msg
+    Right parsed -> 
+      case evalWithEnv env parsed of
+        Right (Halt, _) -> return ()
+        Right t@(res, env') -> outputRes res env' >> repl env'
+        Left msg -> putStrLn msg >> repl env
 
 outputRes :: ReturnType -> Environment -> IO ()
 outputRes (Res n) env = do
-  case runExcept $ formatNode n (fst env) of
-    Right n -> printLns $ printExpr n
+  case runExcept $ runStateT (formatNode n) env of
+    Right (n, _) -> printLns $ printExpr n
     Left msg -> print msg
 outputRes Halt _ = return ()
 
@@ -51,8 +55,10 @@ printLns (x : xs) = do
   printLns xs
 printLns [] = return ()
 
-initRelations :: PContext ()
-initRelations = do
+initNodes :: PContext ()
+initNodes = do
+  addUniverse
+  addEmpty
   addIsInRel
   addIsSubsetRel
 
@@ -70,7 +76,9 @@ initRelations = do
 --     loadFiles xs (snd env')
 loadContent :: String -> Context
 loadContent content = do--void (evaluateMany (getAllParsed content))
-  let c' = getAllParsed content
+  c' <- case getAllParsed content of
+        Left msg -> throwError msg
+        Right sth -> return sth
   -- error $ show c'
   evaluateMany c'
   return ()

@@ -1,5 +1,3 @@
-Empty := finite Set
-
 intersect := Mapping (A', B') -> C' where
     A' := AnySet
     B' := AnySet

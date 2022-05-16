@@ -10,26 +10,25 @@ type Context = PContext ()
 
 {-| accepts any node except statements. 
     In which case, use `addNewStatement` instead -}
-addNewNode :: Node -> PContext Node
+addNewNode :: Node -> PContext ()
 addNewNode node = do
   (nodes, idGen) <- get
   let nodes' = node : nodes
   put (nodes', idGen)
-  return node
 
 {-| only accepts statements -}
-addNewStatement :: Node -> Context
-addNewStatement stmt = do
-  (nodes, idGen) <- get
-  let name = "statement" ++ show idGen
-  let idGen' = idGen + 1
-  let nodes' = stmt : nodes
-  put (nodes', idGen')
+-- addNewStatement :: Node -> Context
+-- addNewStatement stmt = do
+--   (nodes, idGen) <- get
+--   let name = "statement" ++ show idGen
+--   let idGen' = idGen + 1
+--   let nodes' = stmt : nodes
+--   put (nodes', idGen')
 
-addNewStatementM :: PContext Node -> Context
-addNewStatementM stmt = do
-  stmt' <- stmt
-  addNewStatement stmt'
+-- addNewStatementM :: PContext Node -> Context
+-- addNewStatementM stmt = do
+--   stmt' <- stmt
+--   addNewStatement stmt'
 
 move2NextId :: Context
 move2NextId = modify (\(ns, id) -> (ns, id + 1))

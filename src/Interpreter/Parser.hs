@@ -35,10 +35,10 @@ parseValidTags tags = choice (string <$> tags) <* space
 sb :: Parser a -> Parser b -> Parser c -> Parser c
 sb p1 p2 p = space *> p1 *> space *> p <* space <* p2
 
-parse :: String -> Command
+parse :: String -> Either String Command
 parse s = case runParser mainParse "" s of
-  Right r -> r
-  Left l -> error $ show l
+  Right r -> return r
+  Left l -> Left $ show l
 
 mainParse :: Parser Command
 mainParse = choice [
@@ -51,7 +51,7 @@ mainParse = choice [
 parseDef :: Parser Command
 parseDef = Definition <$> parseDefEntry
 
-getAllParsed :: String -> [Command]
+getAllParsed :: String -> Either String [Command]
 getAllParsed contents = 
   let main = do
             ds <- some mainParse
@@ -60,8 +60,8 @@ getAllParsed contents =
   in
   let parsed = runParser main "" contents in
   case parsed of
-    Right r -> r
-    Left l -> error $ show l
+    Right r -> return r
+    Left l -> Left $ show l
 
 parseDefEntry :: Parser DefEntry
 parseDefEntry = do

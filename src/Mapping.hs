@@ -31,11 +31,11 @@ import Util
 --   return ()
 
 -- short for cross, but yields an anonymous set
--- (<.>) :: Node -> Node -> PContext Node
--- (<.>) n1 n2 = do
---   newId <- getNewId
---   let res = DirectProduct (n1, n2) (Exist "cross" newId)
---   return res
+(<.>) :: Node -> Node -> PContext Node
+(<.>) n1 n2 = do
+  newId <- getNewId
+  let res = DirectProduct (n1, n2) (Exist "cross" newId)
+  return res
 
 applyArg :: Node -> Node -> PContext Node
 applyArg (Mapping domain range tags i) arg = do
@@ -45,7 +45,8 @@ applyArg (Mapping domain range tags i) arg = do
   else if isInFlag then do
     id <- getNewId
     let o = Object (Exist (toLower (nameOf $ key range)) id)
-    addNewStatementM $ o `isIn` range
+    claim <- o `isIn` range
+    addNewNode claim
     return o
   else throwError "applyArg: arg is not related to domain"
 applyArg _ _ = throwError "applyArg: not a mapping"
