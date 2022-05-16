@@ -65,7 +65,7 @@ evalExpr (Apply1 (Symbol name) exp1) = do
   f' <- findByNameM' name
   f <- case f' of
         Mapping {} -> return f'
-        _ -> throwError "evalExpr Apply1: f is not a function"
+        _ -> throwError "evalExpr Apply1: f is not a mapping"
   -- isValid <- liftM2 (||) (arg `isInB` domain f) (arg `isSubsetOfB` domain f)
   -- if isValid then return (range f)
   -- else throwError "evalExpr Apply1: arg is not in domain"
@@ -80,6 +80,8 @@ evalExpr (Apply2 (Symbol name) exp1 exp2) = do
   tup <- arg1 <.> arg2
   --isValid <- liftM2 (||) (arg1 `isSubsetOfB` ()) (arg2 `isSubsetOfB` exp2)
   applyArg f tup
+-- it makes no sense to evaluate a relation, since if a relation can only be evaluated if it exists, 
+-- and the existence implies that the result is always true
 evalExpr (Relate (Symbol name) exp1 exp2) = throwError "cannot evaluate a relation"
 evalExpr (Tuple exp1 exp2) = do
   left <- evalExpr exp1
@@ -162,13 +164,6 @@ evalClosure ((isTemplate, d) : ds) = do
   ns <- evalClosure ds
   return (n : ns)
 evalClosure [] = return []
-
-findByNameM' :: String -> PContext Node
-findByNameM' name = do
-  node <- findByNameM name
-  case node of
-    Nothing -> throwError $ "findByNameM': " ++ name ++ " not defined"
-    Just n -> return n
 
 -- findInClosure :: String -> Closure -> Maybe DefEntry
 -- findInClosure name (x@(DefEntry sym _ _) : xs)

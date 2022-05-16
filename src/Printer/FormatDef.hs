@@ -1,8 +1,6 @@
-{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
-{-# HLINT ignore "Use newtype instead of data" #-}
-
 module Printer.FormatDef where
   
+-- the definitions for the output expression
 data Expr 
   = SetExpr {
     name :: String,
@@ -34,6 +32,7 @@ data Expr
     second :: String,
     wheres :: WhereExpr
   }
+  -- claim does not have any information, because it is not a value
   | ClaimExpr
 
 data QualifierExpr 

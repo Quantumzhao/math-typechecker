@@ -62,6 +62,7 @@ anything = Class [] (Exist "Anything" "Anything")
 --   else error "apply fixed"
 -- applyR'ed _ _ = error "apply no match" 
 
+-- generate a new set
 getNewSet :: [String] -> String -> PContext Node
 getNewSet tags name = do
   id <- getNewId
@@ -81,9 +82,11 @@ getConstraints c@Class {} = do
   undefined
 getConstraints _ = throwError "getConstraints: this only applies to sets"
 
+-- check if two nodes are the same
 isSameAs :: Node -> Node -> Bool
 isSameAs a b = trackAlias a == trackAlias b
 
+-- get the original node that it refers to
 trackAlias :: Node -> Node
 trackAlias (Alias ref _) = trackAlias ref
 trackAlias n = n

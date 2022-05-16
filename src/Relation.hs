@@ -7,34 +7,27 @@ import Tags
 import Control.Monad.Except
 import Data.Maybe
 
+-- generate a relation
 genRelation :: Node -> Node -> [String] -> String -> PContext Node
 genRelation relFrom relTo tags name = do
   id <- getNewId
   let rel = Relation relFrom relTo tags (Exist name id)
   return rel
 
-subsetFnDef :: Node
-subsetFnDef = Relation allSets allSets orderedRel (Exist "subset" "subset")
-
-subset :: Node -> String -> PContext Node
-subset a@(Class tags _) name = do
-  newId <- getNewId
-  let newNode = Class tags (Exist name newId)
-  subsetRel <- newNode `isSubsetOf` a
-  addNewNode subsetRel
-  return newNode
-subset _ _ = throwError "Set.subset: not a set"
-
 {-| returns a claim actually -}
+-- use it as an infix operator
 isSubsetOf :: Node -> Node -> PContext Node
 isSubsetOf a b = do
   rel <- get'subsetOf'relation
   let subsetRel = a `relatesTo` b `by` rel
   return subsetRel
 
+-- check if one set is the subset of another
 isSubsetOfB :: Node -> Node -> PContext Bool
+-- the case where the two arguments are cartesian products
 isSubsetOfB (DirectProduct (l, r) _) (DirectProduct (l', r') _) = do
   liftM2 (&&) (l `isSubsetOfB` l') (r `isSubsetOfB` r')
+-- noraml case
 isSubsetOfB a b = do
   -- graph <- getNodes
   isSubsetRel <- get'subsetOf'relation
@@ -46,6 +39,7 @@ isSubsetOfB a b = do
   --   isSubsetOf' a b r (ClaimOfRel from to rel _) = a `isSameAs` from && b `isSameAs` to && r == rel
   --   isSubsetOf' _ _ _ _ = False
 
+-- similar to `isSubsetOfB`
 isInB :: Node -> Node -> PContext Bool
 isInB (DirectProduct (l, r) _) (DirectProduct (l', r') _) = 
   liftM2 (&&) (l `isInB` l') (r `isInB` r')
@@ -61,6 +55,7 @@ isInB e set
     --   isIn' _ _ _ _ = False
 
 {-| returns a claim actually -}
+-- similar to `isSubsetOf`
 isIn :: Node -> Node -> PContext Node
 isIn x set = do
   rel <- get'isIn'relation
@@ -73,8 +68,10 @@ get'isIn'relation = getNodeByName "isIn"
 get'subsetOf'relation :: PContext Node
 get'subsetOf'relation = getNodeByName "isSubsetOf"
 
+-- check if the specified claim exist
 existClaim :: Node -> PContext Bool
 existClaim (ClaimOfRel from to rel _) =
+  -- use `isSameAs` because nodes can be aliases
   let f (ClaimOfRel from' to' rel' _) = from `isSameAs` from' && to `isSameAs` to' && rel == rel'
       f _ = False
   in isJust . findFirst f <$> getNodes
@@ -90,6 +87,8 @@ getAllRelatedClaims :: Node -> PContext Nodes
 getAllRelatedClaims node = getNodes >>= filterM f where
   f r@(ClaimOfRel domain codomain relation id) = return $ node == domain || node == codomain
   f _ = return False
+
+-- these two relations are hardcoded because there is no good way of describing them in my DSL
 
 addIsInRel :: PContext ()
 addIsInRel = do

@@ -30,18 +30,27 @@ import Util
 --   addNewNode name mapping
 --   return ()
 
--- short for cross, but yields an anonymous set
+-- short for cross
 (<.>) :: Node -> Node -> PContext Node
 (<.>) n1 n2 = do
   newId <- getNewId
   let res = DirectProduct (n1, n2) (Exist "cross" newId)
   return res
 
+-- apply argument to functions
+-- the domain can be:
+-- 1. cartesian product of sets
+-- 2. ordered pair of elements
+-- 3. set
+-- 4. element
 applyArg :: Node -> Node -> PContext Node
 applyArg (Mapping domain range tags i) arg = do
+  -- check if the argument is a subset of domain
   isSubset <- arg `isSubsetOfB` domain
+  -- check if the argument is in domain
   isInFlag <- arg `isInB` domain
   if isSubset then return range
+  -- if it is an element, then create the corresponding element in the image
   else if isInFlag then do
     id <- getNewId
     let o = Object (Exist (toLower (nameOf $ key range)) id)

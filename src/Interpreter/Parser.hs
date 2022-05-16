@@ -1,4 +1,3 @@
-{-# LANGUAGE TupleSections #-}
 module Interpreter.Parser where
 
 import Prelude hiding ((<>))
@@ -23,23 +22,20 @@ type Parser = Parsec Void String
 -- >>> runParser parseClaim "" "claim: A ~ B by isSubsetOf"
 -- Right (ClaimOf (Claim {fromC = Variable (Symbol {reference = "A"}), toC = Variable (Symbol {reference = "B"}), relation = Variable (Symbol {reference = "isSubsetOf"})}))
 
+-- all valid characters that can appear in a label
 labelChars :: Parser Char
 labelChars = satisfy $ \ c -> isAlphaNum c || c `elem` ['_', '-', '\'']
-
-reservedName :: [String]
-reservedName = ["Set", "Class", "Relation", "Mapping"]
 
 parseValidTags :: [String] -> Parser String
 parseValidTags tags = choice (string <$> tags) <* space
 
-sb :: Parser a -> Parser b -> Parser c -> Parser c
-sb p1 p2 p = space *> p1 *> space *> p <* space <* p2
-
+-- the entry point for parsing
 parse :: String -> Either String Command
 parse s = case runParser mainParse "" s of
   Right r -> return r
   Left l -> Left $ show l
 
+-- the actual part that does stuff
 mainParse :: Parser Command
 mainParse = choice [
     parseClaim,
@@ -48,9 +44,12 @@ mainParse = choice [
     try expr2Command
   ]
 
+-- definition -> command
 parseDef :: Parser Command
 parseDef = Definition <$> parseDefEntry
 
+-- parse a multiline structure (presumably from the output of a file)
+-- and then return a list of commands
 getAllParsed :: String -> Either String [Command]
 getAllParsed contents = 
   let main = do
@@ -63,12 +62,15 @@ getAllParsed contents =
     Right r -> return r
     Left l -> Left $ show l
 
+-- parse a single definition entry
+-- which should be in the form "? := ...\n"
 parseDefEntry :: Parser DefEntry
 parseDefEntry = do
   many (char '\n')
   sym <- some labelChars
   string " := "
   def <- parseMathDef
+  -- this part hasn't been implemented yet, so leave it empty
   optional $ string "where"
   w <- parseWhere <|> ([] <$ empty)
   let res = DefEntry sym def w
@@ -122,9 +124,12 @@ parseTupleDef = do
   char ')'
   pure $ FromTupleAST $ TupleDef left right
 
+-- a claim can be in two notations
+-- a ~ b by ? or a ? b
 parseClaim :: Parser Command
 parseClaim = ClaimOf <$> (try parseClaimTilde <|> try parseClaimInfix)
 
+-- a ~ b notation
 parseClaimTilde :: Parser Claim
 parseClaimTilde = do
   string "claim: "
@@ -136,6 +141,7 @@ parseClaimTilde = do
   let res = Claim left right rel
   pure res
 
+-- a ? b notation
 parseClaimInfix :: Parser Claim
 parseClaimInfix = do
   string "claim: "
@@ -191,32 +197,3 @@ parseExit = Exit <$ string "exit"
 
 -- >>> runParser (pItemList <* eof) "" "something\n  one"
 -- Right ("something",[("one",[])])
-
-lineComment :: Parser ()
-lineComment = L.skipLineComment "#"
-
-scn :: Parser ()
-scn = L.space space1 lineComment empty
-
-sc :: Parser ()
-sc = L.space (void $ some (char ' ' <|> char '\t')) lineComment empty
-
-lexeme :: Parser a -> Parser a
-lexeme = L.lexeme sc
-
-pItem :: Parser String
-pItem = lexeme (some (alphaNumChar <|> char '-')) <?> "list item"
-
-pComplexItem :: Parser (String, [String])
-pComplexItem = L.indentBlock scn p
-  where
-    p = do
-      header <- pItem
-      return (L.IndentMany Nothing (return . (header, )) pItem)
-
-pItemList :: Parser (String, [(String, [String])])
-pItemList = L.nonIndented scn (L.indentBlock scn p)
-  where
-    p = do
-      header <- pItem
-      return (L.IndentSome Nothing (return . (header, )) pComplexItem)

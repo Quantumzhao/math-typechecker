@@ -25,6 +25,7 @@ data Node
     tags :: [String], 
     key :: Identifier
   }
+  -- an alias of an existing object
   | Alias {
     reference :: Node,
     key :: Identifier
@@ -33,10 +34,12 @@ data Node
     from :: Node,
     to :: Node,
     relation :: Node,
+    -- the key is never used, it's just a placeholder to suppress the record selector error
     key :: Identifier
   }
   deriving (Eq, Show)
 
+-- the qualifiers
 data Identifier
   = Exist {
     nameOf :: String,
@@ -45,6 +48,7 @@ data Identifier
   | ForAll
   deriving (Show)
 
+-- two variables of `forall` qualifiers should never be equal
 instance Eq Identifier where
   (==) (Exist n i) (Exist n' i') = n == n' && i == i'
   (==) _ _ = Prelude.False

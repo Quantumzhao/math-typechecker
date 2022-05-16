@@ -8,6 +8,10 @@ import Control.Monad.Except
 import Relation
 import Data.Maybe
 
+-- converts the nodes to structured expressions to make printing easier 
+-- (and also independent of renderer implementation)
+-- requires info from the context
+-- ignore all the where clauses for now, as they are not implemented yet
 formatNode :: Node -> PContext Expr
 formatNode (Mapping domain range tags i) = do
   nodes <- getNodes
@@ -43,7 +47,10 @@ formatNode t@(DirectProduct (left, right) i) = do
 formatNode o@(Object i) = do
   isInRel <- get'isIn'relation
   nodes <- getNodes
+  -- use the `isIn` relation to determine one possible "parent"
+  -- by parent, I mean the set that has it as an element
   res <- findFirstM (criteria isInRel)
+  -- if there is no "parent", then it is directly in the universe
   u <- getUniverse
   let t = fromMaybe u res
   --let whereExpr = toWhereExpr t nodes in
@@ -71,12 +78,15 @@ formatNode ClaimOfRel {} = return ClaimExpr
 
 getName :: Identifier -> PContext String
 getName (Exist name id) = return name
+-- should be impossible to reach this branch, 
+-- because there should not be a unique name for multiple elements
 getName ForAll = throwError "Format.getName: how did we get there?"
 
--- for demo only
+-- not implemented yet
 mergeWheres :: [WhereExpr] -> WhereExpr
 mergeWheres [] = BlankWhere
 mergeWheres (x : xs) = x
 
+-- not implemented yet
 toWhereExpr :: Node -> Nodes -> WhereExpr
 toWhereExpr node graph = BlankWhere

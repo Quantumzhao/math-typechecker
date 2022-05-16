@@ -29,7 +29,6 @@ library
       Interpreter.AST
       Interpreter.Evaluator
       Interpreter.Parser
-      Interpreter.Tokens
       Mapping
       Node
       Printer.Format
