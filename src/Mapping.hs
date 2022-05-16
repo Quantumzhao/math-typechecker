@@ -1,34 +1,10 @@
 module Mapping where
 
-import Node
-import ContextState
-import Control.Monad.State.Lazy
-import Set
-import Tags
-import Relation
-import Control.Monad.Except
-import Util
-
--- compose :: Mapping -> Mapping -> Maybe Mapping
--- compose (Map da ia ba) (Map db ib bb)
---   | ia == db = Just $ Map da ib (getBijectivity ba bb)
---   | otherwise = Nothing
---   where
---     getBijectivity any Bijective = any
---     getBijectivity Bijective any = any
---     getBijectivity Surjective Injective = undefined
---     getBijectivity Injective Surjective = undefined 
---     getBijectivity _ _ = None
-
--- setOfMappings :: Node
--- setOfMappings = Set (Type (Unary Definition universal universal [])) []
-
-
--- newMapping :: String -> Node -> Node -> [String] -> Context
--- newMapping name from to tags = do
---   let mapping = Unary Definition from to tags
---   addNewNode name mapping
---   return ()
+import Node ( Identifier(..), Node(..) )
+import ContextState ( PContext, addNewNode, getNewId )
+import Relation ( isIn, isInB, isSubsetOfB )
+import Control.Monad.Except ( MonadError(throwError) )
+import Util ( toLower )
 
 -- short for cross
 (<.>) :: Node -> Node -> PContext Node

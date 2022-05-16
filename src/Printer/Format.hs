@@ -4,9 +4,9 @@ import Node hiding (tags)
 import Printer.FormatDef hiding (ForAll, Exist)
 import ContextState
 import Set
-import Control.Monad.Except
-import Relation
-import Data.Maybe
+import Control.Monad.Except ( MonadError(throwError) )
+import Relation ( by, existClaim, get'isIn'relation, relatesTo )
+import Data.Maybe ( fromMaybe )
 
 -- converts the nodes to structured expressions to make printing easier 
 -- (and also independent of renderer implementation)

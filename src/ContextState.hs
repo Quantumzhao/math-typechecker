@@ -1,7 +1,7 @@
 module ContextState where
-import Control.Monad.State
-import Control.Monad.Except
-import Node
+import Control.Monad.State ( filterM, modify, MonadState(put, get), StateT )
+import Control.Monad.Except ( MonadError(throwError), Except )
+import Node ( Identifier(nameOf), Node(Relation, key) )
 
 type Nodes = [Node]
 type Environment = (Nodes, Int)
@@ -14,20 +14,6 @@ addNewNode node = do
   (nodes, idGen) <- get
   let nodes' = node : nodes
   put (nodes', idGen)
-
-{-| only accepts statements -}
--- addNewStatement :: Node -> Context
--- addNewStatement stmt = do
---   (nodes, idGen) <- get
---   let name = "statement" ++ show idGen
---   let idGen' = idGen + 1
---   let nodes' = stmt : nodes
---   put (nodes', idGen')
-
--- addNewStatementM :: PContext Node -> Context
--- addNewStatementM stmt = do
---   stmt' <- stmt
---   addNewStatement stmt'
 
 move2NextId :: Context
 move2NextId = modify (\(ns, id) -> (ns, id + 1))

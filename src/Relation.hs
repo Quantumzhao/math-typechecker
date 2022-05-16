@@ -1,11 +1,18 @@
 module Relation where
-import Node
+import Node ( Identifier(..), Node(..) )
 import ContextState
-import Set
-import Control.Monad.State.Lazy
-import Tags
-import Control.Monad.Except
-import Data.Maybe
+  ( PContext,
+    Nodes,
+    addNewNode,
+    findFirst,
+    getNodes,
+    getNewId,
+    getNodeByName )
+import Set ( allSets, getUniverse, isSameAs, isSet )
+import Control.Monad.State.Lazy ( liftM2, filterM )
+import Tags ( orderedRel )
+import Control.Monad.Except ( MonadError(throwError) )
+import Data.Maybe ( isJust )
 
 -- generate a relation
 genRelation :: Node -> Node -> [String] -> String -> PContext Node
@@ -32,12 +39,6 @@ isSubsetOfB a b = do
   -- graph <- getNodes
   isSubsetRel <- get'subsetOf'relation
   existClaim (a `relatesTo` b `by` isSubsetRel)
-  -- case findFirst (isSubsetOf' isSubsetRel a b) graph of
-  --   Just _ -> return True
-  --   Nothing -> return (a `isSameAs` b)
-  -- where
-  --   isSubsetOf' a b r (ClaimOfRel from to rel _) = a `isSameAs` from && b `isSameAs` to && r == rel
-  --   isSubsetOf' _ _ _ _ = False
 
 -- similar to `isSubsetOfB`
 isInB :: Node -> Node -> PContext Bool
@@ -48,11 +49,6 @@ isInB e set
   | otherwise = do
     isInRel <- get'isIn'relation
     existClaim (e `relatesTo` set `by` isInRel)
-    -- nodes <- getNodes
-    -- return $ isJust $ findFirst (isIn' isInRel e set) nodes
-    -- where
-    --   isIn' a b r (ClaimOfRel from to rel _) = a `isSameAs` from && b `isSameAs` to && r == rel
-    --   isIn' _ _ _ _ = False
 
 {-| returns a claim actually -}
 -- similar to `isSubsetOf`

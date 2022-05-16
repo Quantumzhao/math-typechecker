@@ -1,12 +1,9 @@
-{-# LANGUAGE ScopedTypeVariables #-}
-
 module Set where
 
 import Prelude as P
-import ContextState
-import Node as N
-import Tags
-import Control.Monad.Except
+import ContextState ( PContext, addNewNode, getRelations, getNewId, getNodeByName )
+import Node as N ( Identifier(Exist), Node(Class, Alias) )
+import Control.Monad.Except ( MonadError(throwError) )
 
 empty :: Node
 empty = Class [setLit] (Exist "Empty" "Empty")
@@ -26,41 +23,6 @@ anyClass = Class [] (Exist "AnyClass" "AnyClass")
 
 anything :: Node
 anything = Class [] (Exist "Anything" "Anything")
-
--- getElement :: Node -> String -> PContext Node
--- getElement set@(Class tags i) name = do
---   newId <- getNewId
---   if set == empty then throwError "Set.getElement: empty set"
---   else do
---     let e = Object (Exist name newId)
---     addNewStatementM (e `isIn` set)
---     return e
--- getElement _ _ = throwError "Set.getElement: not a set"
-
--- applyR'ed :: Node -> Node -> PContext Node
--- applyR'ed v binop@(Binary l r o ts name _) = do
---   subset <- isSubsetOf' v l  
---   newId <- getNewId 
---   if subset then
---     return $ Unary (App binop v) r o ts anonymous newId 
---   else error "apply binary"
--- applyR'ed v' un@(Unary u v o ts name _) = do
---   subset <- isSubsetOf' v' v
---   if subset then return o
---   else error "apply unary"
--- applyR'ed v rel@(Relation l r ts name _) = do
---   subset <- isSubsetOf' v l
---   newId <- getNewId 
---   if subset then 
---     return $ Class (App rel v) r ts anonymous newId
---   else error "apply relation"
--- applyR'ed v fixed@(Class u r ts name _) = do
---   subset <- isSubsetOf' r v 
---   newId <- getNewId 
---   if subset then
---     return $ Statement (App fixed v) ts anonymous newId
---   else error "apply fixed"
--- applyR'ed _ _ = error "apply no match" 
 
 -- generate a new set
 getNewSet :: [String] -> String -> PContext Node

@@ -2,9 +2,10 @@ module Printer.Print2String where
 
 import Prelude hiding (print)
 import Node
-import Set
-import ContextState
 import Printer.FormatDef as P
+  ( WhereExpr(..),
+    QualifierExpr(..),
+    Expr(..) )
 import Data.List (intercalate)
 
 -- converts output expression to strings

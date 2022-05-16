@@ -1,18 +1,15 @@
-module Main where
+module Main( main ) where
 
-import ContextState
-import Interpreter.Parser
-import Printer.Print2String
-import Printer.Format
-import Node
-import Control.Monad.State
-import Interpreter.AST
-import System.IO
-import Data.Functor
-import Control.Monad.Except
-import Interpreter.Evaluator
-import Relation
-import Set
+import ContextState ( PContext, Environment, Context )
+import Interpreter.Parser ( getAllParsed, parse )
+import Printer.Print2String ( printExpr )
+import Printer.Format ( formatNode )
+import Control.Monad.State ( void, StateT(runStateT) )
+import System.IO ( openFile, hGetContents, IOMode(ReadMode) )
+import Control.Monad.Except ( runExcept, MonadError(throwError) )
+import Interpreter.Evaluator ( evaluateMany, evalWithEnv, updateState, ReturnType(..) )
+import Relation ( addIsSubsetRel, addIsInRel )
+import Set ( addEmpty, addUniverse )
 
 main :: IO ()
 main = do
@@ -22,9 +19,6 @@ main = do
   case updateState (initNodes >> loadMany contents) initialState of
     Left msg -> putStrLn msg >> putStrLn "Program Halt. "
     Right env' -> putStrLn "Successfully loaded all definitions" >> repl env'
-  -- Right (ret, env) <- loadFiles include initNodes
-  -- outputRes ret initNodes
-  -- repl env
 
 initialState = ([], 0)
 
@@ -55,9 +49,6 @@ outputRes (Res n) env = do
     Left msg -> print msg
 outputRes Halt _ = return ()
 
--- >>> fst $ evalWithEnv ([], 0) (parse "A := Set A")
--- Res (Class {tags = ["Set"], key = Exist {nameOf = "A", id = "0"}})
-
 printLns :: [String] -> IO ()
 printLns (x : xs) = do
   putStrLn x
@@ -71,20 +62,8 @@ initNodes = do
   addIsInRel
   addIsSubsetRel
 
--- load :: Environment -> String -> Either String (ReturnType, Environment)
--- load env content =
---   let inputs =  getAllParsed content in
---   runExcept $ runStateT (evaluateMany (Definition <$> inputs)) env
-
--- loadFiles :: [String] -> Environment -> IO (Either String (ReturnType, Environment))
--- loadFiles [] env = return $ Right (Halt, env)
--- loadFiles [x] env = (openFile x ReadMode >>= hGetContents) <&> load env
--- loadFiles (x : xs) env =
---   do
---     Right env' <- loadFiles [x] env
---     loadFiles xs (snd env')
 loadContent :: String -> Context
-loadContent content = do--void (evaluateMany (getAllParsed content))
+loadContent content = do
   c' <- case getAllParsed content of
           Left msg -> throwError msg
           Right sth -> return sth
@@ -97,19 +76,6 @@ loadMany [] = return ()
 loadMany (x : xs) = do
   loadContent x
   loadMany xs
-
--- getContent path = 
---   let read = openFile path ReadMode >>= hGetContents in
---   read
-
--- loadFiles :: [String] -> Environment -> IO (Either String (ReturnType, Environment))
--- loadFiles [] env = return $ Right (Halt, env)
--- loadFiles [x] env = do
---   content <- openFile x ReadMode >>= hGetContents
---   return $ runExcept $ runStateT (load content) env
--- loadFiles (x : xs) env = do
---   Right env' <- loadFiles [x] env
---   loadFiles xs (snd env')
 
 {-| paths -> contents -}
 -- takes in a list of paths of files, and get the contents from the files

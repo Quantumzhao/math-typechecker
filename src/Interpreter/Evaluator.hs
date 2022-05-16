@@ -1,17 +1,29 @@
 module Interpreter.Evaluator where
 import ContextState
-import Control.Monad
-import Control.Monad.State.Lazy hiding (void)
-import Printer.FormatDef hiding (Clause, tags, Exist, ForAll)
-import Interpreter.AST hiding (tags)
-import Node hiding (Definition)
-import Printer.Format
-import Relation
-import Set
-import Interpreter.Parser
-import Control.Monad.Identity (Identity(runIdentity))
-import Control.Monad.Except (runExcept, runExceptT, MonadError (throwError))
-import Mapping
+  ( Context,
+    PContext,
+    Environment,
+    addNewNode,
+    findByNameM',
+    getNewId )
+import Control.Monad.State.Lazy ( StateT(runStateT) )
+import Interpreter.AST
+  ( MathExp(..),
+    Closure,
+    Claim(Claim),
+    Symbol(Symbol),
+    Tuple(TupleDef),
+    Object(ObjectDef),
+    Relation(RelDef),
+    Mapping(MappingDef),
+    Class(ClassDef),
+    MathDef(..),
+    DefEntry(DefEntry),
+    Command(..) )
+import Node ( Identifier(..), Node(..) )
+import Relation ( isIn )
+import Control.Monad.Except ( runExcept, MonadError(throwError) )
+import Mapping ( (<.>), applyArg )
 
 data ReturnType
   = Res Node
@@ -39,12 +51,7 @@ evaluateMany :: [Command] -> PContext ReturnType
 evaluateMany [] = return Halt
 evaluateMany (x : xs) = do
   res <- evaluate x
-  -- submitEvalRes res
   evaluateMany xs
-
--- submitEvalRes :: ReturnType -> PContext ()
--- submitEvalRes (Res n) = void $ addNewNode n
--- submitEvalRes _ = return ()
 
 evalWithEnv ::  Environment -> Command -> Either String (ReturnType, Environment)
 evalWithEnv env com = runExcept $ runStateT (evaluate com) env
@@ -54,10 +61,6 @@ updateState stateTrans env =
   case runExcept $ runStateT stateTrans env of
     Left msg -> Left msg
     Right (_, env') -> Right env'
-    
-
--- >>> evalWithEnv ([], 0) (parse "A := Set")
--- (Res (Class {tags = ["Set"], key = Exist {nameOf = "A", id = "0"}}),([],1))
 
 evalExpr :: MathExp -> PContext Node
 evalExpr (Apply1 (Symbol name) exp1) = do
@@ -66,9 +69,6 @@ evalExpr (Apply1 (Symbol name) exp1) = do
   f <- case f' of
         Mapping {} -> return f'
         _ -> throwError "evalExpr Apply1: f is not a mapping"
-  -- isValid <- liftM2 (||) (arg `isInB` domain f) (arg `isSubsetOfB` domain f)
-  -- if isValid then return (range f)
-  -- else throwError "evalExpr Apply1: arg is not in domain"
   applyArg f' arg
 evalExpr (Apply2 (Symbol name) exp1 exp2) = do
   arg1 <- evalExpr exp1
@@ -78,7 +78,6 @@ evalExpr (Apply2 (Symbol name) exp1 exp2) = do
         Mapping {} -> return f'
         _ -> throwError "evalExpr Aply1: f is not a function"
   tup <- arg1 <.> arg2
-  --isValid <- liftM2 (||) (arg1 `isSubsetOfB` ()) (arg2 `isSubsetOfB` exp2)
   applyArg f tup
 -- it makes no sense to evaluate a relation, since if a relation can only be evaluated if it exists, 
 -- and the existence implies that the result is always true
@@ -127,11 +126,9 @@ evalMathDef (FromRelationAST (RelDef from to tags)) key = do
   return res
 evalMathDef (FromObjectAST (ObjectDef set)) key = do
   set' <- evalExpr set
-  -- error $ show set'
   let res = Object key
   claim <- res `isIn` set'
   addNewNode claim
-  -- error $ show claim
   return res
 evalMathDef (FromTupleAST (TupleDef left right)) key = do
   left' <- evalExpr left
@@ -164,9 +161,3 @@ evalClosure ((isTemplate, d) : ds) = do
   ns <- evalClosure ds
   return (n : ns)
 evalClosure [] = return []
-
--- findInClosure :: String -> Closure -> Maybe DefEntry
--- findInClosure name (x@(DefEntry sym _ _) : xs)
---   | sym == name = Just x
---   | otherwise = findInClosure name xs
--- findInClosure name [] = Nothing

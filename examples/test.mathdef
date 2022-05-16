@@ -21,3 +21,7 @@ multR := Mapping (Real, Real) -> Real
 r := element in Real
 
 a := element in A
+
+Functions := Set
+
+compose := Mapping (Functions, Functions) -> Functions

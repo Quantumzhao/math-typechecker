@@ -1,26 +1,39 @@
 module Interpreter.Parser where
 
 import Prelude hiding ((<>))
-import Text.Megaparsec hiding (parse)
-import Text.Megaparsec.Char
-import Data.Void
+import Text.Megaparsec
+  ( (<|>),
+    empty,
+    optional,
+    anySingle,
+    runParser,
+    satisfy,
+    choice,
+    many,
+    some,
+    Parsec,
+    MonadParsec(try) )
+import Text.Megaparsec.Char ( char, space, string )
+import Data.Void ( Void )
 import Interpreter.AST
-import Data.Char
+  ( MathExp(Tuple, Variable, Apply1, Apply2),
+    Closure,
+    Claim(Claim),
+    Symbol(Symbol),
+    Tuple(TupleDef),
+    Object(ObjectDef),
+    Relation(RelDef),
+    Mapping(MappingDef),
+    Class(ClassDef),
+    MathDef(..),
+    DefEntry(DefEntry),
+    Command(..) )
+import Data.Char ( isAlphaNum )
 import qualified Text.Megaparsec.Char.Lexer as L
 import Control.Monad (void)
-import Tags
+import Tags ( classTags, mappingTags, relationTags )
 
 type Parser = Parsec Void String
-
--- >>> parseDef "A := finite Set"
--- Couldn't match expected type ‘[Char] -> t’
---             with actual type ‘ParsecT Void String Identity Command’
-
--- >>> runParser mainParse "" "claim: A isSubsetOf A"
--- Right (ClaimOf (Claim {fromC = Variable (Symbol {reference = "A"}), toC = Variable (Symbol {reference = "A"}), relation = Variable (Symbol {reference = "isSubsetOf"})}))
-
--- >>> runParser parseClaim "" "claim: A ~ B by isSubsetOf"
--- Right (ClaimOf (Claim {fromC = Variable (Symbol {reference = "A"}), toC = Variable (Symbol {reference = "B"}), relation = Variable (Symbol {reference = "isSubsetOf"})}))
 
 -- all valid characters that can appear in a label
 labelChars :: Parser Char
@@ -194,6 +207,3 @@ parseTuple = do
 
 parseExit :: Parser Command
 parseExit = Exit <$ string "exit"
-
--- >>> runParser (pItemList <* eof) "" "something\n  one"
--- Right ("something",[("one",[])])
